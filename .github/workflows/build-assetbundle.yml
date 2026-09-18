@@ -17,16 +17,19 @@ jobs:
   build:
     name: Build AssetBundles
     runs-on: ubuntu-latest
+
     steps:
       - name: Free Disk Space
         run: |
           echo "Disk space before cleanup:"
           df -h /
+
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /usr/local/lib/android
           sudo rm -rf /opt/ghc
           sudo rm -rf /usr/local/share/boost
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+
           echo "Disk space after cleanup:"
           df -h /
 
@@ -46,18 +49,46 @@ jobs:
       - name: Configure Target Platform
         run: |
           TARGET="${{ inputs.targetPlatform }}"
+
           if [ -z "$TARGET" ]; then
             TARGET="Android"
           fi
+
           echo "Selected Target Platform: $TARGET"
-          echo "TARGET_PLATFORM=$TARGET" >> $GITHUB_ENV
+          echo "TARGET_PLATFORM=$TARGET" >> "$GITHUB_ENV"
+
+      - name: Check Unity Secrets
+        shell: bash
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        run: |
+          if [ -n "$UNITY_EMAIL" ]; then
+            echo "UNITY_EMAIL: SET"
+          else
+            echo "UNITY_EMAIL: MISSING"
+          fi
+
+          if [ -n "$UNITY_PASSWORD" ]; then
+            echo "UNITY_PASSWORD: SET"
+          else
+            echo "UNITY_PASSWORD: MISSING"
+          fi
+
+          if [ -n "$UNITY_LICENSE" ]; then
+            echo "UNITY_LICENSE: SET"
+            echo "UNITY_LICENSE length: ${#UNITY_LICENSE}"
+          else
+            echo "UNITY_LICENSE: MISSING"
+          fi
 
       - name: Build AssetBundles with GameCI
         uses: game-ci/unity-builder@v4
         env:
-  UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
-  UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-  UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
         with:
           projectPath: Test
           unityVersion: 2021.3.43f1
