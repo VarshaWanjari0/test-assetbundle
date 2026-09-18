@@ -52,35 +52,10 @@ jobs:
           echo "Selected Target Platform: $TARGET"
           echo "TARGET_PLATFORM=$TARGET" >> $GITHUB_ENV
 
-      - name: Configure Unity License
-        run: |
-          if [ -n "${{ secrets.UNITY_LICENSE }}" ]; then
-            echo "Using license from repository secret UNITY_LICENSE."
-            echo "UNITY_LICENSE<<UNITY_LICENSE_EOF" >> $GITHUB_ENV
-            echo "${{ secrets.UNITY_LICENSE }}" >> $GITHUB_ENV
-            echo "" >> $GITHUB_ENV
-            echo "UNITY_LICENSE_EOF" >> $GITHUB_ENV
-          elif [ -f "Unity_lic.ulf" ]; then
-            echo "Using license from repository file Unity_lic.ulf."
-            echo "UNITY_LICENSE<<UNITY_LICENSE_EOF" >> $GITHUB_ENV
-            cat Unity_lic.ulf >> $GITHUB_ENV
-            echo "" >> $GITHUB_ENV
-            echo "UNITY_LICENSE_EOF" >> $GITHUB_ENV
-          elif [ -f "Test/Unity_lic.ulf" ]; then
-            echo "Using license from Test/Unity_lic.ulf."
-            echo "UNITY_LICENSE<<UNITY_LICENSE_EOF" >> $GITHUB_ENV
-            cat Test/Unity_lic.ulf >> $GITHUB_ENV
-            echo "" >> $GITHUB_ENV
-            echo "UNITY_LICENSE_EOF" >> $GITHUB_ENV
-          else
-            echo "::error::No Unity license found!"
-            exit 1
-          fi
-
       - name: Build AssetBundles with GameCI
         uses: game-ci/unity-builder@v4
         env:
-          UNITY_LICENSE: ${{ env.UNITY_LICENSE }}
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
         with:
           projectPath: Test
           unityVersion: 2021.3.43f1
