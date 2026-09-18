@@ -1,8 +1,6 @@
 name: Build AssetBundle
 
 on:
-  push:
-    branches: [ main, master ]
   workflow_dispatch:
     inputs:
       targetPlatform:
@@ -20,6 +18,18 @@ jobs:
     name: Build AssetBundles
     runs-on: ubuntu-latest
     steps:
+      - name: Free Disk Space
+        run: |
+          echo "Disk space before cleanup:"
+          df -h /
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/share/boost
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          echo "Disk space after cleanup:"
+          df -h /
+
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
