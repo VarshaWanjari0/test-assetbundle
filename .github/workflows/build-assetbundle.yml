@@ -35,6 +35,14 @@ jobs:
         with:
           lfs: true
 
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: Test/Library
+          key: Library-${{ hashFiles('Test/Assets/**', 'Test/Packages/**', 'Test/ProjectSettings/**') }}
+          restore-keys: |
+            Library-
+
       - name: Configure Target Platform
         run: |
           TARGET="${{ inputs.targetPlatform }}"
