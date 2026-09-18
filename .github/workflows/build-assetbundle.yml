@@ -1,0 +1,73 @@
+name: Build AssetBundle
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      targetPlatform:
+        description: 'Target Platform'
+        required: true
+        default: 'Android'
+        type: choice
+        options:
+          - Android
+          - StandaloneWindows64
+          - StandaloneLinux64
+          - iOS
+
+jobs:
+  build:
+    name: Build AssetBundles (${{ github.event.inputs.targetPlatform || 'Android' }})
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: Test/Library
+          key: Library-${{ hashFiles('Test/Assets/**', 'Test/Packages/**', 'Test/ProjectSettings/**') }}
+          restore-keys: |
+            Library-
+
+      - name: Configure Unity License
+        run: |
+          if [ -n "${{ secrets.UNITY_LICENSE }}" ]; then
+            echo "Using license from repository secret UNITY_LICENSE."
+            echo "UNITY_LICENSE=${{ secrets.UNITY_LICENSE }}" >> $GITHUB_ENV
+          elif [ -f "Unity_lic.ulf" ]; then
+            echo "Using license from repository file Unity_lic.ulf."
+            echo "UNITY_LICENSE<<EOF" >> $GITHUB_ENV
+            cat Unity_lic.ulf >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+          elif [ -f "Test/Unity_lic.ulf" ]; then
+            echo "Using license from Test/Unity_lic.ulf."
+            echo "UNITY_LICENSE<<EOF" >> $GITHUB_ENV
+            cat Test/Unity_lic.ulf >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+          else
+            echo "::error::No Unity license found! Ensure Unity_lic.ulf is present or UNITY_LICENSE secret is configured."
+            exit 1
+          fi
+
+      - name: Build AssetBundles with GameCI
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ env.UNITY_LICENSE }}
+        with:
+          projectPath: Test
+          unityVersion: 2021.3.43f1
+          targetPlatform: ${{ github.event.inputs.targetPlatform || 'Android' }}
+          buildMethod: BuildAssetBundles.BuildAllBundles
+          customParameters: -buildTarget ${{ github.event.inputs.targetPlatform || 'Android' }}
+
+      - name: Upload Built AssetBundles
+        uses: actions/upload-artifact@v4
+        with:
+          name: AssetBundles-${{ github.event.inputs.targetPlatform || 'Android' }}
+          path: Test/Assets/AssetBundles/
+          if-no-files-found: error
