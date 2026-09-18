@@ -14,65 +14,47 @@ on:
           - Android
           - StandaloneWindows64
           - StandaloneLinux64
-          - iOS
 
 jobs:
   build:
-    name: Build AssetBundles (${{ github.event.inputs.targetPlatform || 'Android' }})
+    name: Build AssetBundles
     runs-on: ubuntu-latest
+    container:
+      image: unityci/editor:ubuntu-2021.3.43f1-android-3.2.2
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           lfs: true
 
-      - name: Cache Unity Library
-        uses: actions/cache@v4
-        with:
-          path: Test/Library
-          key: Library-${{ hashFiles('Test/Assets/**', 'Test/Packages/**', 'Test/ProjectSettings/**') }}
-          restore-keys: |
-            Library-
-
-      - name: Configure Unity License
+      - name: Activate Unity License
         run: |
-          if [ -n "${{ secrets.UNITY_LICENSE }}" ]; then
-            echo "Using license from repository secret UNITY_LICENSE."
-            echo "UNITY_LICENSE<<UNITY_LICENSE_EOF" >> $GITHUB_ENV
-            echo "${{ secrets.UNITY_LICENSE }}" >> $GITHUB_ENV
-            echo "" >> $GITHUB_ENV
-            echo "UNITY_LICENSE_EOF" >> $GITHUB_ENV
-          elif [ -f "Unity_lic.ulf" ]; then
-            echo "Using license from repository file Unity_lic.ulf."
-            echo "UNITY_LICENSE<<UNITY_LICENSE_EOF" >> $GITHUB_ENV
-            cat Unity_lic.ulf >> $GITHUB_ENV
-            echo "" >> $GITHUB_ENV
-            echo "UNITY_LICENSE_EOF" >> $GITHUB_ENV
+          mkdir -p /root/.local/share/unity3d/Unity/
+          if [ -f "Unity_lic.ulf" ]; then
+            cp Unity_lic.ulf /root/.local/share/unity3d/Unity/Unity_lic.ulf
+            echo "Installed license from Unity_lic.ulf"
           elif [ -f "Test/Unity_lic.ulf" ]; then
-            echo "Using license from Test/Unity_lic.ulf."
-            echo "UNITY_LICENSE<<UNITY_LICENSE_EOF" >> $GITHUB_ENV
-            cat Test/Unity_lic.ulf >> $GITHUB_ENV
-            echo "" >> $GITHUB_ENV
-            echo "UNITY_LICENSE_EOF" >> $GITHUB_ENV
+            cp Test/Unity_lic.ulf /root/.local/share/unity3d/Unity/Unity_lic.ulf
+            echo "Installed license from Test/Unity_lic.ulf"
           else
-            echo "::error::No Unity license found! Ensure Unity_lic.ulf is present or UNITY_LICENSE secret is configured."
+            echo "No license file found!"
             exit 1
           fi
 
-      - name: Build AssetBundles with GameCI
-        uses: game-ci/unity-builder@v4
-        env:
-          UNITY_LICENSE: ${{ env.UNITY_LICENSE }}
-        with:
-          projectPath: Test
-          unityVersion: 2021.3.43f1
-          targetPlatform: ${{ github.event.inputs.targetPlatform || 'Android' }}
-          buildMethod: BuildAssetBundles.BuildAllBundles
-          customParameters: -buildTarget ${{ github.event.inputs.targetPlatform || 'Android' }}
+      - name: Build AssetBundles
+        run: |
+          unity-editor \
+            -quit \
+            -batchmode \
+            -nographics \
+            -silent-crashes \
+            -projectPath ./Test \
+            -buildTarget ${{ github.event.inputs.targetPlatform || 'Android' }} \
+            -executeMethod BuildAssetBundles.BuildAllBundles \
+            -logFile /dev/stdout
 
       - name: Upload Built AssetBundles
         uses: actions/upload-artifact@v4
         with:
           name: AssetBundles-${{ github.event.inputs.targetPlatform || 'Android' }}
           path: Test/Assets/AssetBundles/
-          if-no-files-found: error
