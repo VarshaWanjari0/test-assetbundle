@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Light Material
-  m_Shader: {fileID: 4800000, guid: 1c09cda8611a9e441892a299b6b62caf, type: 3}
+  m_Shader: {fileID: 4800000, guid: 92223940d30419e469f267044b392ba9, type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords: []
   m_LightmapFlags: 4
@@ -21,11 +21,11 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
       _FalloffTex:
-        m_Texture: {fileID: 2800000, guid: 8b1a7bdce90f46749b57d5c028725d1d, type: 3}
+        m_Texture: {fileID: 2800000, guid: ce8e96db2fb3c2444aeab4aa6049645c, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
       _ShadowTex:
-        m_Texture: {fileID: 2800000, guid: 9040f420e7292cd4796e90b1c7c95917, type: 3}
+        m_Texture: {fileID: 2800000, guid: ec1def1317fc6c34b93ec4820a665902, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: {}
