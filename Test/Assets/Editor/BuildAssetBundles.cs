@@ -35,6 +35,19 @@ public class BuildAssetBundles
                 }
                 break;
             }
+        // Run car mod setup if present
+        try
+        {
+            var setupMethod = typeof(SetupCarMod).GetMethod("Build", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+            if (setupMethod != null)
+            {
+                Debug.Log("[BuildAssetBundles] Executing SetupCarMod.Build()...");
+                setupMethod.Invoke(null, null);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[BuildAssetBundles] Note on SetupCarMod: {ex.Message}");
         }
 
         Debug.Log($"[BuildAssetBundles] Starting AssetBundle build for target '{target}' into '{assetBundleDirectory}'...");

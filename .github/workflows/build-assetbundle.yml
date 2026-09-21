@@ -99,5 +99,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: AssetBundles-${{ env.TARGET_PLATFORM }}
-          path: Test/Assets/AssetBundles/
+          path: |
+            Test/Assets/AssetBundles/
+            Test/Builds/
           if-no-files-found: warn
