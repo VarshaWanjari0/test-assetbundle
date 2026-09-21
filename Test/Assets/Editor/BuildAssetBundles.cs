@@ -27,25 +27,26 @@ public class BuildAssetBundles
 
         try
         {
-            var setupMethod = typeof(SetupCarMod).GetMethod("Build", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
-            if (setupMethod != null)
-            {
-                Debug.Log("[BuildAssetBundles] Executing SetupCarMod.Build()...");
-                setupMethod.Invoke(null, null);
-            }
+            Debug.Log("[BuildAssetBundles] Running SetupCarMod.Build()...");
+            SetupCarMod.Build();
         }
         catch (Exception ex)
         {
-            Debug.LogWarning("[BuildAssetBundles] Note on SetupCarMod: " + ex.Message);
+            Debug.LogWarning("[BuildAssetBundles] Note on SetupCarMod: " + ex);
         }
 
+        Debug.Log("[BuildAssetBundles] Starting AssetBundle build for target " + target);
         AssetBundleManifest manifest = BuildPipeline.BuildAssetBundles(
             assetBundleDirectory,
             BuildAssetBundleOptions.None,
             target
         );
 
-        if (manifest == null) throw new Exception("[BuildAssetBundles] Build failed or null manifest.");
-        Debug.Log("[BuildAssetBundles] Build completed successfully for " + target);
+        if (manifest == null) throw new Exception("[BuildAssetBundles] Build failed or returned null manifest.");
+        Debug.Log("[BuildAssetBundles] Built bundles successfully:");
+        foreach (string b in manifest.GetAllAssetBundles())
+        {
+            Debug.Log("  - " + b);
+        }
     }
 }
