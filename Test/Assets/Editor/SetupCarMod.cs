@@ -8,7 +8,11 @@ public class SetupCarMod
     [MenuItem("Tools/Mod Car Prefab")]
     public static void Build()
     {
-        string modelPath = "Assets/Models/newcar.glb";
+        string modelPath = "Assets/Models/newcar.obj";
+        if (AssetDatabase.LoadAssetAtPath<GameObject>(modelPath) == null)
+        {
+            modelPath = "Assets/Models/newcar.glb";
+        }
         GameObject modelAsset = AssetDatabase.LoadAssetAtPath<GameObject>(modelPath);
         if (modelAsset == null)
         {
@@ -124,14 +128,22 @@ public class SetupCarMod
         GameObject savedPrefab = PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
         Object.DestroyImmediate(root);
 
-        // 9. Assign AssetBundle Name
+        // 9. Assign AssetBundle Name to replace original rgs bundle
         AssetImporter importer = AssetImporter.GetAtPath(prefabPath);
-        importer.assetBundleName = "truck";
+        if (importer != null)
+        {
+            importer.assetBundleName = "rgs";
+        }
 
         // 10. Build AssetBundle for Android
-        string buildDir = "Builds";
+        string buildDir = "Assets/AssetBundles";
         if (!Directory.Exists(buildDir)) Directory.CreateDirectory(buildDir);
-        BuildPipeline.BuildAssetBundles(buildDir, BuildAssetBundleOptions.None, BuildTarget.Android);
-        Debug.Log("🎉 PREFAB UPDATED & ASSETBUNDLE BAKED SUCCESSFULLY TO: " + buildDir);
+        BuildPipeline.BuildAssetBundles(buildDir, BuildAssetBundleOptions.None, EditorUserBuildSettings.activeBuildTarget);
+
+        string altBuildDir = "Builds";
+        if (!Directory.Exists(altBuildDir)) Directory.CreateDirectory(altBuildDir);
+        BuildPipeline.BuildAssetBundles(altBuildDir, BuildAssetBundleOptions.None, EditorUserBuildSettings.activeBuildTarget);
+
+        Debug.Log("🎉 NEW CAR PREFAB (rgs.prefab) UPDATED & ASSETBUNDLE BAKED SUCCESSFULLY!");
     }
 }
