@@ -35,6 +35,8 @@ public class BuildAssetBundles
                 }
                 break;
             }
+        }
+
         // Run car mod setup if present
         try
         {
