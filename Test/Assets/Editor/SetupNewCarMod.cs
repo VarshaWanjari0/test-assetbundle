@@ -260,6 +260,38 @@ public class SetupNewCarMod
             importer.assetBundleName = "rgs";
         }
 
+        
+        // Force all models, textures and materials into rgs bundle
+        string[] allAssets = new string[] {
+            prefabPath,
+            "Assets/Models/car_body.obj",
+            "Assets/Models/wheel_FL.obj",
+            "Assets/Models/wheel_FR.obj",
+            "Assets/Models/wheel_RL.obj",
+            "Assets/Models/wheel_RR.obj",
+            "Assets/Models/steering_wheel.obj",
+            "Assets/Models/RB1c_Tire_1k.png",
+            "Assets/Models/UCB_Lights_and_Glass_Transperent.png",
+            "Assets/Models/UCB_Lights_and_Glass.png",
+            "Assets/Models/UCB_BOTTOM.png",
+            "Assets/Models/UCB_Interiors_1.png",
+            "Assets/Models/Carbadges_misc_U.png",
+            "Assets/Models/Numberplates_Misk_U.png",
+            "Assets/Models/RB1c_Tire_1k.mat",
+            "Assets/Models/UCB_Lights_and_Glass_Transperent.mat",
+            "Assets/Models/UCB_Lights_and_Glass.mat",
+            "Assets/Models/Maureen67_Bodymat.mat",
+            "Assets/Models/UCB_BOTTOM.mat",
+            "Assets/Models/UCB_Interiors_1.mat",
+            "Assets/Models/Carbadges_misc_U.png",
+            "Assets/Models/Numberplates_Misk_U.mat"
+        };
+        foreach (string ap in allAssets)
+        {
+            AssetImporter imp = AssetImporter.GetAtPath(ap);
+            if (imp != null) imp.assetBundleName = "rgs";
+        }
+
         Debug.Log("🎉 6x Large NewCar prefab 'rgs.prefab' successfully baked with full materials and textures!");
     }
 
