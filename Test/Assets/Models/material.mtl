@@ -1,8 +1,57 @@
-# https://github.com/mikedh/trimesh
+# Full material library for NewCar
+newmtl RB1c_Tire_1k
+Ka 1.0 1.0 1.0
+Kd 1.0 1.0 1.0
+Ks 0.2 0.2 0.2
+Ns 10.0
+map_Kd RB1c_Tire_1k.png
 
-newmtl material_0
-Ka 0.40000000 0.40000000 0.40000000
-Kd 0.40000000 0.40000000 0.40000000
-Ks 0.40000000 0.40000000 0.40000000
-Ns 1.00000000
-map_Kd material_0.png
+newmtl UCB_Lights_and_Glass_Transperent
+Ka 1.0 1.0 1.0
+Kd 1.0 1.0 1.0
+Ks 0.9 0.9 0.9
+Ns 60.0
+d 0.5
+Tr 0.5
+map_Kd UCB_Lights_and_Glass_Transperent.png
+
+newmtl UCB_Lights_and_Glass
+Ka 1.0 1.0 1.0
+Kd 1.0 1.0 1.0
+Ks 0.8 0.8 0.8
+Ns 30.0
+map_Kd UCB_Lights_and_Glass.png
+
+newmtl Maureen67_Bodymat
+Ka 0.05 0.09 0.08
+Kd 0.05 0.09 0.08
+Ks 0.8 0.8 0.8
+Ns 40.0
+
+newmtl UCB_BOTTOM
+Ka 1.0 1.0 1.0
+Kd 1.0 1.0 1.0
+Ks 0.1 0.1 0.1
+Ns 5.0
+map_Kd UCB_BOTTOM.png
+
+newmtl UCB_Interiors_1
+Ka 1.0 1.0 1.0
+Kd 1.0 1.0 1.0
+Ks 0.1 0.1 0.1
+Ns 5.0
+map_Kd UCB_Interiors_1.png
+
+newmtl Carbadges_misc_U
+Ka 1.0 1.0 1.0
+Kd 1.0 1.0 1.0
+Ks 0.5 0.5 0.5
+Ns 20.0
+map_Kd Carbadges_misc_U.png
+
+newmtl Numberplates_Misk_U
+Ka 1.0 1.0 1.0
+Kd 1.0 1.0 1.0
+Ks 0.2 0.2 0.2
+Ns 10.0
+map_Kd Numberplates_Misk_U.png
