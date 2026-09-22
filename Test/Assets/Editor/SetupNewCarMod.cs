@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 public class SetupNewCarMod
 {
-    const float S = 2.5f; // 2.5X SCALE AS REQUESTED!
+    const float S = 2.75f; // 2.75X SCALE AS REQUESTED!
 
     [MenuItem("Tools/Build New Car Prefab")]
     public static void Build()
@@ -36,41 +36,41 @@ public class SetupNewCarMod
             { "Numberplates_Misk_U", matPlates }
         };
 
-        // 2. Root Car Object (LAYER 9 FOR INDIAN BIKES INTERACTION)
+        // 2. Root Car Object (LAYER 9 FOR INDIAN BIKES DRIVING 3D)
         GameObject root = new GameObject("rgs");
         root.layer = 9;
 
-        // Rigidbody (calibrated for 2.5x vehicle)
+        // Rigidbody (calibrated for 2.75x vehicle)
         Rigidbody rb = root.AddComponent<Rigidbody>();
-        rb.mass = 3000f;
+        rb.mass = 3500f;
         rb.drag = 0.05f;
         rb.angularDrag = 0.05f;
         rb.interpolation = RigidbodyInterpolation.Interpolate;
         rb.centerOfMass = new Vector3(0f, 0.20f * S, 0f);
 
-        // Solid Body BoxCollider (Hull) - Sized so player can walk up to door without clipping
+        // Solid Body BoxCollider (Hull)
         BoxCollider hullCol = root.AddComponent<BoxCollider>();
         hullCol.isTrigger = false;
         hullCol.size = new Vector3(1.65f * S, 1.05f * S, 3.90f * S);
         hullCol.center = new Vector3(0f, 0.65f * S, 0f);
 
-        // Enter Vehicle Trigger BoxCollider (Accessible on ground from both sides)
+        // Enter Vehicle Trigger BoxCollider (Layer 9, ground accessible from both sides)
         BoxCollider enterTrigger = root.AddComponent<BoxCollider>();
         enterTrigger.isTrigger = true;
         enterTrigger.size = new Vector3(3.2f * S, 1.8f * S, 3.5f * S);
         enterTrigger.center = new Vector3(0f, 0.9f * S, 0.3f * S);
 
-        // 3. Anchors (ALL ON LAYER 9)
-        // DoorPos is outside the solid hull so player walking to it will reach it without collision obstruction!
+        // 3. Anchors (LAYER 9)
+        // DoorPos is outside the solid hull on the ground so player walking directly reaches it without being blocked!
         GameObject doorPos = new GameObject("DoorPos");
         doorPos.transform.SetParent(root.transform, false);
-        doorPos.transform.localPosition = new Vector3(2.85f, 0.25f, 0.75f);
+        doorPos.transform.localPosition = new Vector3(3.10f, 0.25f, 0.80f);
         doorPos.transform.localRotation = Quaternion.Euler(0f, -20f, 0f);
         doorPos.layer = 9;
 
         GameObject sitPos = new GameObject("SitPosL");
         sitPos.transform.SetParent(root.transform, false);
-        sitPos.transform.localPosition = new Vector3(0.65f, 0.85f, 0.25f);
+        sitPos.transform.localPosition = new Vector3(0.70f, 0.90f, 0.30f);
         sitPos.layer = 9;
 
         GameObject camTarget = new GameObject("Cam");
@@ -83,13 +83,13 @@ public class SetupNewCarMod
 
         GameObject leftFoot = new GameObject("LeftFoot");
         leftFoot.transform.SetParent(root.transform, false);
-        leftFoot.transform.localPosition = new Vector3(0.50f, 0.35f, 0.70f);
+        leftFoot.transform.localPosition = new Vector3(0.55f, 0.35f, 0.75f);
 
         GameObject rightFoot = new GameObject("RightFoot");
         rightFoot.transform.SetParent(root.transform, false);
-        rightFoot.transform.localPosition = new Vector3(0.70f, 0.35f, 0.70f);
+        rightFoot.transform.localPosition = new Vector3(0.75f, 0.35f, 0.75f);
 
-        // 4. Doors with HingeJoint and CarJointControl (Required by RideCar coroutine!)
+        // 4. Doors with HingeJoint and CarJointControl (Crucial for RideCar coroutine!)
         GameObject doorsParent = new GameObject("Doors");
         doorsParent.transform.SetParent(root.transform, false);
         doorsParent.layer = 9;
@@ -172,8 +172,8 @@ public class SetupNewCarMod
             wc.mass = 45f;
             wc.suspensionDistance = 0.15f;
             JointSpring spr = wc.suspensionSpring;
-            spr.spring = 38000f;
-            spr.damper = 4000f;
+            spr.spring = 40000f;
+            spr.damper = 4200f;
             spr.targetPosition = 0.5f;
             wc.suspensionSpring = spr;
             colliders[i] = wc;
@@ -211,9 +211,15 @@ public class SetupNewCarMod
             }
         }
 
-        // 8. Interior & Steering Wheel
+        // 8. Interior, Steering Wheel & InteriorCam (Crucial for RideCar camera switch!)
         GameObject interior = new GameObject("Interior");
         interior.transform.SetParent(root.transform, false);
+        interior.layer = 9;
+
+        GameObject intCam = new GameObject("InteriorCam");
+        intCam.transform.SetParent(interior.transform, false);
+        intCam.transform.localPosition = new Vector3(0.70f, 1.20f, 0.30f);
+        intCam.layer = 9;
 
         GameObject steerDummy = new GameObject("steering_dummy");
         steerDummy.transform.SetParent(interior.transform, false);
@@ -249,7 +255,7 @@ public class SetupNewCarMod
         cc.m_rigidBody = rb;
         cc.centerOfMass = com.transform;
         cc.handel = steerNode.transform;
-        cc.maxTorque = 15000f;
+        cc.maxTorque = 16000f;
         cc.topSpeed = 240f;
         cc.reverseSpeed = 50f;
         cc.bodyInterpolation = 1;
@@ -278,13 +284,14 @@ public class SetupNewCarMod
         rc.sitPos = sitPos.transform;
         rc.doorPos = doorPos.transform;
         rc.camTarget = camTarget.transform;
+        rc.interiorCam = intCam; // Crucial InteriorCam reference!
         rc.leftHand = leftHand.transform;
         rc.rightHand = rightHand.transform;
         rc.leftFoot = leftFoot.transform;
         rc.rightFoot = rightFoot.transform;
         rc._car = cc;
         rc.CamDis = 15;
-        rc.doorsHings = new HingeJoint[] { hjFR, hjFL };
+        rc.doorsHings = new HingeJoint[] { hjFR, hjFL }; // Crucial door hinge reference!
 
         CarImpactCheck cic = root.AddComponent<CarImpactCheck>();
         cic.crashSound = aCrash;
@@ -337,7 +344,7 @@ public class SetupNewCarMod
             importer.assetBundleName = "rgs";
         }
 
-        Debug.Log("🎉 2.5x NewCar prefab 'rgs.prefab' with CarJointControl, unobstructed DoorPos, and HingeJoints successfully baked!");
+        Debug.Log("🎉 2.75x NewCar prefab 'rgs.prefab' with InteriorCam, HingeJoints, and unobstructed DoorPos successfully baked!");
     }
 
     static Material GetOrCreateMat(string matName, string texPath, Color col, bool transparent)
