@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 public class SetupNewCarMod
 {
-    const float S = 6.0f; // 6x SCALE AS REQUESTED!
+    const float S = 3.0f; // 3X SCALE AS REQUESTED!
 
     [MenuItem("Tools/Build New Car Prefab")]
     public static void Build()
@@ -36,54 +36,56 @@ public class SetupNewCarMod
             { "Numberplates_Misk_U", matPlates }
         };
 
-        // 2. Root Car Object
+        // 2. Root Car Object (MUST BE LAYER 9 FOR INDIAN BIKES INTERACTION!)
         GameObject root = new GameObject("rgs");
+        root.layer = 9;
 
-        // Rigidbody (calibrated for 6x large vehicle)
+        // Rigidbody (calibrated for 3x scale vehicle)
         Rigidbody rb = root.AddComponent<Rigidbody>();
-        rb.mass = 6000f;
+        rb.mass = 3500f;
         rb.drag = 0.05f;
         rb.angularDrag = 0.05f;
         rb.interpolation = RigidbodyInterpolation.Interpolate;
-        rb.centerOfMass = new Vector3(0f, 0.22f * S, -0.10f * S);
+        rb.centerOfMass = new Vector3(0f, 0.20f * S, 0f);
 
-        // Solid Body BoxCollider
+        // Solid Body BoxCollider (Hull)
         BoxCollider hullCol = root.AddComponent<BoxCollider>();
         hullCol.isTrigger = false;
         hullCol.size = new Vector3(1.84f, 1.10f, 4.10f) * S;
         hullCol.center = new Vector3(0f, 0.65f * S, 0f);
 
-        // Enter Vehicle Trigger BoxCollider
+        // Enter Vehicle Trigger BoxCollider (Layer 9, ground accessible from both sides!)
         BoxCollider enterTrigger = root.AddComponent<BoxCollider>();
         enterTrigger.isTrigger = true;
-        enterTrigger.size = new Vector3(1.5f, 1.5f, 2.5f) * S;
-        enterTrigger.center = new Vector3(-1.15f * S, 0.70f * S, 0f);
+        enterTrigger.size = new Vector3(2.5f * S, 1.8f * S, 3.5f * S);
+        enterTrigger.center = new Vector3(0f, 1.0f * S, 0.2f * S);
 
-        // 3. Anchors
+        // 3. Anchors (ALL ON LAYER 9)
         GameObject sitPos = new GameObject("SitPosL");
         sitPos.transform.SetParent(root.transform, false);
-        sitPos.transform.localPosition = new Vector3(-0.30f, 0.48f, -0.15f) * S;
+        sitPos.transform.localPosition = new Vector3(0.35f * S, 0.55f * S, 0.10f * S);
+        sitPos.layer = 9;
 
         GameObject doorPos = new GameObject("DoorPos");
         doorPos.transform.SetParent(root.transform, false);
-        doorPos.transform.localPosition = new Vector3(-1.15f, 0.25f, -0.10f) * S;
+        doorPos.transform.localPosition = new Vector3(1.10f * S, 0.30f * S, 0.40f * S);
         doorPos.layer = 9;
 
         GameObject camTarget = new GameObject("Cam");
         camTarget.transform.SetParent(root.transform, false);
-        camTarget.transform.localPosition = new Vector3(0f, 1.40f, -0.20f) * S;
+        camTarget.transform.localPosition = new Vector3(0f, 1.40f * S, -0.20f * S);
 
         GameObject com = new GameObject("Center of Mass");
         com.transform.SetParent(root.transform, false);
-        com.transform.localPosition = new Vector3(0f, 0.22f, -0.10f) * S;
+        com.transform.localPosition = new Vector3(0f, 0.20f * S, 0f);
 
         GameObject leftFoot = new GameObject("LeftFoot");
         leftFoot.transform.SetParent(root.transform, false);
-        leftFoot.transform.localPosition = new Vector3(-0.35f, 0.20f, 0.45f) * S;
+        leftFoot.transform.localPosition = new Vector3(0.25f * S, 0.20f * S, 0.45f * S);
 
         GameObject rightFoot = new GameObject("RightFoot");
         rightFoot.transform.SetParent(root.transform, false);
-        rightFoot.transform.localPosition = new Vector3(-0.25f, 0.20f, 0.45f) * S;
+        rightFoot.transform.localPosition = new Vector3(0.45f * S, 0.20f * S, 0.45f * S);
 
         // 4. Visual Models Parent (carzyCar / truck)
         GameObject carzyCar = new GameObject("carzyCar");
@@ -92,6 +94,7 @@ public class SetupNewCarMod
 
         GameObject truckObj = new GameObject("truck");
         truckObj.transform.SetParent(carzyCar.transform, false);
+        truckObj.layer = 9;
 
         GameObject bodyAsset = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Models/car_body.obj");
         if (bodyAsset != null)
@@ -125,11 +128,11 @@ public class SetupNewCarMod
 
             WheelCollider wc = colGo.AddComponent<WheelCollider>();
             wc.radius = ((i < 2) ? 0.32f : 0.34f) * S;
-            wc.mass = 45f * S;
-            wc.suspensionDistance = 0.12f * S;
+            wc.mass = 45f;
+            wc.suspensionDistance = 0.15f;
             JointSpring spr = wc.suspensionSpring;
-            spr.spring = 45000f * S;
-            spr.damper = 4500f * S;
+            spr.spring = 45000f;
+            spr.damper = 4500f;
             spr.targetPosition = 0.5f;
             wc.suspensionSpring = spr;
             colliders[i] = wc;
@@ -205,8 +208,8 @@ public class SetupNewCarMod
         cc.m_rigidBody = rb;
         cc.centerOfMass = com.transform;
         cc.handel = steerNode.transform;
-        cc.maxTorque = 25000f;
-        cc.topSpeed = 220f;
+        cc.maxTorque = 18000f;
+        cc.topSpeed = 240f;
         cc.reverseSpeed = 50f;
         cc.bodyInterpolation = 1;
 
@@ -239,6 +242,8 @@ public class SetupNewCarMod
         rc.leftFoot = leftFoot.transform;
         rc.rightFoot = rightFoot.transform;
         rc._car = cc;
+        rc.CamDis = 15;
+        rc.doorsHings = new HingeJoint[0];
 
         CarImpactCheck cic = root.AddComponent<CarImpactCheck>();
         cic.crashSound = aCrash;
@@ -250,18 +255,7 @@ public class SetupNewCarMod
         ev.explosionForce = 5000f;
         ev.explosionRadius = 5f;
 
-        // 9. Save Prefab and assign AssetBundle name
-        PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
-        Object.DestroyImmediate(root);
-
-        AssetImporter importer = AssetImporter.GetAtPath(prefabPath);
-        if (importer != null)
-        {
-            importer.assetBundleName = "rgs";
-        }
-
-        
-        // Force all models, textures and materials into rgs bundle
+        // 9. Force all models, textures, materials into rgs bundle
         string[] allAssets = new string[] {
             prefabPath,
             "Assets/Models/car_body.obj",
@@ -283,7 +277,7 @@ public class SetupNewCarMod
             "Assets/Models/Maureen67_Bodymat.mat",
             "Assets/Models/UCB_BOTTOM.mat",
             "Assets/Models/UCB_Interiors_1.mat",
-            "Assets/Models/Carbadges_misc_U.png",
+            "Assets/Models/Carbadges_misc_U.mat",
             "Assets/Models/Numberplates_Misk_U.mat"
         };
         foreach (string ap in allAssets)
@@ -292,7 +286,17 @@ public class SetupNewCarMod
             if (imp != null) imp.assetBundleName = "rgs";
         }
 
-        Debug.Log("🎉 6x Large NewCar prefab 'rgs.prefab' successfully baked with full materials and textures!");
+        // 10. Save Prefab
+        PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
+        Object.DestroyImmediate(root);
+
+        AssetImporter importer = AssetImporter.GetAtPath(prefabPath);
+        if (importer != null)
+        {
+            importer.assetBundleName = "rgs";
+        }
+
+        Debug.Log("🎉 3x Large NewCar prefab 'rgs.prefab' with Layer 9 and enter button trigger successfully baked!");
     }
 
     static Material GetOrCreateMat(string matName, string texPath, Color col, bool transparent)
@@ -301,7 +305,8 @@ public class SetupNewCarMod
         Material mat = AssetDatabase.LoadAssetAtPath<Material>(path);
         if (mat == null)
         {
-            Shader shader = Shader.Find(transparent ? "Standard" : "Standard");
+            Shader shader = Shader.Find(transparent ? "Transparent/Diffuse" : "Standard");
+            if (shader == null) shader = Shader.Find("Mobile/Diffuse");
             if (shader == null) shader = Shader.Find("Diffuse");
             mat = new Material(shader);
             if (!string.IsNullOrEmpty(texPath))
@@ -343,7 +348,6 @@ public class SetupNewCarMod
                     }
                 }
             }
-            // If renderer name hints at material
             string objName = mr.gameObject.name;
             foreach (var kvp in matMap)
             {
