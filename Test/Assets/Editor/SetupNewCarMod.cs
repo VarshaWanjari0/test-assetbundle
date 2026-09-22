@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 public class SetupNewCarMod
 {
-    const float S = 2.75f; // 2.75X SCALE AS REQUESTED!
+    const float S = 2.75f; // EXACT 2.75X SCALE
 
     [MenuItem("Tools/Build New Car Prefab")]
     public static void Build()
@@ -14,11 +14,11 @@ public class SetupNewCarMod
         string prefabFolder = Path.GetDirectoryName(prefabPath);
         if (!Directory.Exists(prefabFolder)) Directory.CreateDirectory(prefabFolder);
 
-        // 1. Prepare Materials & Textures
+        // 1. Prepare Materials
         Material matTire = GetOrCreateMat("RB1c_Tire_1k", "Assets/Models/RB1c_Tire_1k.png", Color.white, false);
-        Material matGlass = GetOrCreateMat("UCB_Lights_and_Glass_Transperent", "Assets/Models/UCB_Lights_and_Glass_Transperent.png", new Color(1f, 1f, 1f, 0.5f), true);
+        Material matGlass = GetOrCreateMat("UCB_Lights_and_Glass_Transperent", "Assets/Models/UCB_Lights_and_Glass_Transperent.png", new Color(1f, 1f, 1f, 0.45f), true);
         Material matLights = GetOrCreateMat("UCB_Lights_and_Glass", "Assets/Models/UCB_Lights_and_Glass.png", Color.white, false);
-        Material matBody = GetOrCreateMat("Maureen67_Bodymat", "", new Color(0.05f, 0.09f, 0.08f, 1f), false);
+        Material matBody = GetOrCreateMat("Maureen67_Bodymat", "", new Color(0.08f, 0.12f, 0.10f, 1f), false);
         Material matBottom = GetOrCreateMat("UCB_BOTTOM", "Assets/Models/UCB_BOTTOM.png", Color.white, false);
         Material matInterior = GetOrCreateMat("UCB_Interiors_1", "Assets/Models/UCB_Interiors_1.png", Color.white, false);
         Material matBadges = GetOrCreateMat("Carbadges_misc_U", "Assets/Models/Carbadges_misc_U.png", Color.white, false);
@@ -36,97 +36,85 @@ public class SetupNewCarMod
             { "Numberplates_Misk_U", matPlates }
         };
 
-        // 2. Root Car Object (LAYER 9 FOR INDIAN BIKES DRIVING 3D)
+        // 2. Root Car Object (Layer 9 for Indian Bikes Driving 3D)
         GameObject root = new GameObject("rgs");
         root.layer = 9;
 
-        // Rigidbody (calibrated for 2.75x vehicle)
         Rigidbody rb = root.AddComponent<Rigidbody>();
         rb.mass = 3500f;
         rb.drag = 0.05f;
         rb.angularDrag = 0.05f;
         rb.interpolation = RigidbodyInterpolation.Interpolate;
-        rb.centerOfMass = new Vector3(0f, 0.20f * S, 0f);
+        rb.centerOfMass = new Vector3(0f, 0.25f * S, 0f);
 
-        // Solid Body BoxCollider (Hull)
+        // Solid Body BoxCollider (Hull) - tight to car body so doorPos is 100% unobstructed
         BoxCollider hullCol = root.AddComponent<BoxCollider>();
         hullCol.isTrigger = false;
-        hullCol.size = new Vector3(1.65f * S, 1.05f * S, 3.90f * S);
+        hullCol.size = new Vector3(1.50f * S, 0.95f * S, 3.80f * S);
         hullCol.center = new Vector3(0f, 0.65f * S, 0f);
 
-        // Enter Vehicle Trigger BoxCollider (Layer 9, ground accessible from both sides)
+        // Interaction Trigger BoxCollider (placed specifically at the driver door entrance)
         BoxCollider enterTrigger = root.AddComponent<BoxCollider>();
         enterTrigger.isTrigger = true;
-        enterTrigger.size = new Vector3(3.2f * S, 1.8f * S, 3.5f * S);
-        enterTrigger.center = new Vector3(0f, 0.9f * S, 0.3f * S);
+        enterTrigger.center = new Vector3(-3.0f, 0.8f, 0.25f);
+        enterTrigger.size = new Vector3(2.2f, 2.0f, 2.6f);
 
-        // 3. Anchors (LAYER 9)
-        // DoorPos is outside the solid hull on the ground so player walking directly reaches it without being blocked!
+        // 3. Driver Positions & Anchors (Layer 9)
+        // Left-hand drive Mustang: Driver is on left (negative X)
         GameObject doorPos = new GameObject("DoorPos");
         doorPos.transform.SetParent(root.transform, false);
-        doorPos.transform.localPosition = new Vector3(3.10f, 0.25f, 0.80f);
-        doorPos.transform.localRotation = Quaternion.Euler(0f, -20f, 0f);
+        doorPos.transform.localPosition = new Vector3(-3.10f, 0.25f, 0.25f);
+        doorPos.transform.localRotation = Quaternion.Euler(0f, 15f, 0f);
         doorPos.layer = 9;
 
         GameObject sitPos = new GameObject("SitPosL");
         sitPos.transform.SetParent(root.transform, false);
-        sitPos.transform.localPosition = new Vector3(0.70f, 0.90f, 0.30f);
+        sitPos.transform.localPosition = new Vector3(-0.52f, 1.10f, 0.05f);
         sitPos.layer = 9;
 
         GameObject camTarget = new GameObject("Cam");
         camTarget.transform.SetParent(root.transform, false);
         camTarget.transform.localPosition = new Vector3(0f, 1.40f * S, -0.20f * S);
+        camTarget.layer = 9;
 
         GameObject com = new GameObject("Center of Mass");
         com.transform.SetParent(root.transform, false);
-        com.transform.localPosition = new Vector3(0f, 0.20f * S, 0f);
+        com.transform.localPosition = new Vector3(0f, 0.25f * S, 0f);
+        com.layer = 9;
 
         GameObject leftFoot = new GameObject("LeftFoot");
         leftFoot.transform.SetParent(root.transform, false);
-        leftFoot.transform.localPosition = new Vector3(0.55f, 0.35f, 0.75f);
+        leftFoot.transform.localPosition = new Vector3(-0.65f, 0.55f, 0.85f);
+        leftFoot.layer = 9;
 
         GameObject rightFoot = new GameObject("RightFoot");
         rightFoot.transform.SetParent(root.transform, false);
-        rightFoot.transform.localPosition = new Vector3(0.75f, 0.35f, 0.75f);
+        rightFoot.transform.localPosition = new Vector3(-0.45f, 0.55f, 0.85f);
+        rightFoot.layer = 9;
 
-        // 4. Doors with HingeJoint and CarJointControl (Crucial for RideCar coroutine!)
+        // 4. Doors with HingeJoint and CarJointControl
         GameObject doorsParent = new GameObject("Doors");
         doorsParent.transform.SetParent(root.transform, false);
         doorsParent.layer = 9;
 
         GameObject doorFL = new GameObject("DoorFL");
         doorFL.transform.SetParent(doorsParent.transform, false);
-        doorFL.transform.localPosition = new Vector3(-0.95f * S, 0.5f * S, 0.3f * S);
+        doorFL.transform.localPosition = new Vector3(-1.0f * S, 0.55f * S, 0.25f);
         doorFL.layer = 9;
         Rigidbody rbFL = doorFL.AddComponent<Rigidbody>();
-        rbFL.mass = 50f;
+        rbFL.mass = 150f;
+        BoxCollider bcFL = doorFL.AddComponent<BoxCollider>();
+        bcFL.size = new Vector3(0.1f, 0.6f * S, 0.9f * S);
         HingeJoint hjFL = doorFL.AddComponent<HingeJoint>();
         hjFL.connectedBody = rb;
         hjFL.axis = Vector3.up;
         hjFL.useLimits = true;
-        JointLimits limFL = hjFL.limits; limFL.min = 0f; limFL.max = 70f; hjFL.limits = limFL;
+        JointLimits limFL = hjFL.limits; limFL.min = 0f; limFL.max = 65f; hjFL.limits = limFL;
         CarJointControl cjcFL = doorFL.AddComponent<CarJointControl>();
         cjcFL.hingJoint = hjFL;
         cjcFL._rigidbody = rbFL;
         cjcFL.isDoor = 1;
         cjcFL.DropThisDoor = 1;
-
-        GameObject doorFR = new GameObject("DoorFR");
-        doorFR.transform.SetParent(doorsParent.transform, false);
-        doorFR.transform.localPosition = new Vector3(0.95f * S, 0.5f * S, 0.3f * S);
-        doorFR.layer = 9;
-        Rigidbody rbFR = doorFR.AddComponent<Rigidbody>();
-        rbFR.mass = 50f;
-        HingeJoint hjFR = doorFR.AddComponent<HingeJoint>();
-        hjFR.connectedBody = rb;
-        hjFR.axis = Vector3.up;
-        hjFR.useLimits = true;
-        JointLimits limFR = hjFR.limits; limFR.min = 0f; limFR.max = 70f; hjFR.limits = limFR;
-        CarJointControl cjcFR = doorFR.AddComponent<CarJointControl>();
-        cjcFR.hingJoint = hjFR;
-        cjcFR._rigidbody = rbFR;
-        cjcFR.isDoor = 1;
-        cjcFR.DropThisDoor = 1;
 
         // 5. Visual Models Parent (carzyCar / truck)
         GameObject carzyCar = new GameObject("carzyCar");
@@ -148,9 +136,10 @@ public class SetupNewCarMod
             ApplyMaterials(bodyInst, matMap);
         }
 
-        // 6. Wheel Colliders Parent
+        // 6. Wheel Colliders
         GameObject wheelColParent = new GameObject("Wheel collider");
         wheelColParent.transform.SetParent(root.transform, false);
+        wheelColParent.layer = 9;
 
         WheelCollider[] colliders = new WheelCollider[4];
         string[] colNames = { "Col FL", "Col FR", "Col RL", "Col RR" };
@@ -166,68 +155,86 @@ public class SetupNewCarMod
             GameObject colGo = new GameObject(colNames[i]);
             colGo.transform.SetParent(wheelColParent.transform, false);
             colGo.transform.localPosition = colPositions[i];
+            colGo.layer = 9;
 
             WheelCollider wc = colGo.AddComponent<WheelCollider>();
             wc.radius = ((i < 2) ? 0.32f : 0.34f) * S;
             wc.mass = 45f;
             wc.suspensionDistance = 0.15f;
             JointSpring spr = wc.suspensionSpring;
-            spr.spring = 40000f;
-            spr.damper = 4200f;
+            spr.spring = 42000f;
+            spr.damper = 4500f;
             spr.targetPosition = 0.5f;
             wc.suspensionSpring = spr;
             colliders[i] = wc;
         }
 
-        // 7. Visual Wheels Parent
+        // 7. Visual Wheel Models
         GameObject wheelModelParent = new GameObject("Wheel Model");
-        wheelModelParent.transform.SetParent(carzyCar.transform, false);
+        wheelModelParent.transform.SetParent(root.transform, false);
+        wheelModelParent.layer = 9;
 
         Transform[] tireMeshes = new Transform[4];
-        string[] wheelModelNames = { "FL", "FR", "RL", "RR" };
-        string[] wheelAssetPaths = {
+        string[] wheelObjPaths = {
             "Assets/Models/wheel_FL.obj",
             "Assets/Models/wheel_FR.obj",
             "Assets/Models/wheel_RL.obj",
             "Assets/Models/wheel_RR.obj"
         };
+        string[] wheelNodeNames = { "FL", "FR", "RL", "RR" };
 
         for (int i = 0; i < 4; i++)
         {
-            GameObject wPivot = new GameObject(wheelModelNames[i]);
+            GameObject wPivot = new GameObject(wheelNodeNames[i]);
             wPivot.transform.SetParent(wheelModelParent.transform, false);
             wPivot.transform.localPosition = colPositions[i];
+            wPivot.layer = 9;
             tireMeshes[i] = wPivot.transform;
 
-            GameObject wAsset = AssetDatabase.LoadAssetAtPath<GameObject>(wheelAssetPaths[i]);
+            GameObject wAsset = AssetDatabase.LoadAssetAtPath<GameObject>(wheelObjPaths[i]);
             if (wAsset != null)
             {
-                GameObject wModel = Object.Instantiate(wAsset, wPivot.transform);
-                wModel.name = "Model";
-                wModel.transform.localPosition = Vector3.zero;
-                wModel.transform.localRotation = Quaternion.identity;
-                wModel.transform.localScale = Vector3.one * S;
-                ApplyMaterials(wModel, matMap);
+                GameObject wInst = Object.Instantiate(wAsset, wPivot.transform);
+                wInst.name = wheelNodeNames[i] + "_mesh";
+                wInst.transform.localPosition = Vector3.zero;
+                wInst.transform.localRotation = Quaternion.identity;
+                wInst.transform.localScale = Vector3.one * S;
+                ApplyMaterials(wInst, matMap);
             }
         }
 
-        // 8. Interior, Steering Wheel & InteriorCam (Crucial for RideCar camera switch!)
+        // 8. Interior & Cockpit
         GameObject interior = new GameObject("Interior");
         interior.transform.SetParent(root.transform, false);
+        interior.transform.localPosition = new Vector3(0f, 0.77f * S, 0f);
         interior.layer = 9;
 
         GameObject intCam = new GameObject("InteriorCam");
         intCam.transform.SetParent(interior.transform, false);
-        intCam.transform.localPosition = new Vector3(0.70f, 1.20f, 0.30f);
+        intCam.transform.localPosition = new Vector3(-0.52f, 0.60f, -0.15f);
         intCam.layer = 9;
+        intCam.SetActive(false);
+
+        GameObject camObj = new GameObject("Camera");
+        camObj.transform.SetParent(intCam.transform, false);
+        camObj.transform.localPosition = Vector3.zero;
+        camObj.transform.localRotation = Quaternion.identity;
+        camObj.layer = 9;
+        camObj.tag = "MainCamera";
+        Camera camComp = camObj.AddComponent<Camera>();
+        camComp.fieldOfView = 60f;
+        camComp.nearClipPlane = 0.05f;
+        camComp.enabled = false;
 
         GameObject steerDummy = new GameObject("steering_dummy");
         steerDummy.transform.SetParent(interior.transform, false);
-        steerDummy.transform.localPosition = new Vector3(-0.288f, 0.576f, 0.083f) * S;
+        steerDummy.transform.localPosition = new Vector3(-0.51f, 0.48f, 0.42f);
+        steerDummy.layer = 9;
 
         GameObject steerNode = new GameObject("Steer");
         steerNode.transform.SetParent(steerDummy.transform, false);
         steerNode.transform.localRotation = Quaternion.Euler(-20f, 0f, 0f);
+        steerNode.layer = 9;
 
         GameObject steerAsset = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Models/steering_wheel.obj");
         if (steerAsset != null)
@@ -242,11 +249,13 @@ public class SetupNewCarMod
 
         GameObject leftHand = new GameObject("LeftHand");
         leftHand.transform.SetParent(steerNode.transform, false);
-        leftHand.transform.localPosition = new Vector3(-0.15f, 0f, 0f) * S;
+        leftHand.transform.localPosition = new Vector3(-0.16f * S, 0f, 0f);
+        leftHand.layer = 9;
 
         GameObject rightHand = new GameObject("RightHand");
         rightHand.transform.SetParent(steerNode.transform, false);
-        rightHand.transform.localPosition = new Vector3(0.15f, 0f, 0f) * S;
+        rightHand.transform.localPosition = new Vector3(0.16f * S, 0f, 0f);
+        rightHand.layer = 9;
 
         // 9. Attach Vehicle MonoBehaviours
         CarControl cc = root.AddComponent<CarControl>();
@@ -255,7 +264,7 @@ public class SetupNewCarMod
         cc.m_rigidBody = rb;
         cc.centerOfMass = com.transform;
         cc.handel = steerNode.transform;
-        cc.maxTorque = 16000f;
+        cc.maxTorque = 18000f;
         cc.topSpeed = 240f;
         cc.reverseSpeed = 50f;
         cc.bodyInterpolation = 1;
@@ -284,14 +293,14 @@ public class SetupNewCarMod
         rc.sitPos = sitPos.transform;
         rc.doorPos = doorPos.transform;
         rc.camTarget = camTarget.transform;
-        rc.interiorCam = intCam; // Crucial InteriorCam reference!
+        rc.interiorCam = intCam;
         rc.leftHand = leftHand.transform;
         rc.rightHand = rightHand.transform;
         rc.leftFoot = leftFoot.transform;
         rc.rightFoot = rightFoot.transform;
         rc._car = cc;
         rc.CamDis = 15;
-        rc.doorsHings = new HingeJoint[] { hjFR, hjFL }; // Crucial door hinge reference!
+        rc.doorsHings = new HingeJoint[] { hjFL };
 
         CarImpactCheck cic = root.AddComponent<CarImpactCheck>();
         cic.crashSound = aCrash;
