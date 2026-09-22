@@ -27,15 +27,15 @@ public class BuildAssetBundles
 
         try
         {
-            Debug.Log("[BuildAssetBundles] Running SetupCarMod.Build()...");
-            SetupCarMod.Build();
+            Debug.Log("[BuildAssetBundles] Executing SetupNewCarMod.Build()...");
+            SetupNewCarMod.Build();
         }
         catch (Exception ex)
         {
-            Debug.LogWarning("[BuildAssetBundles] Note on SetupCarMod: " + ex);
+            Debug.LogError("[BuildAssetBundles] Error in SetupNewCarMod: " + ex);
         }
 
-        Debug.Log("[BuildAssetBundles] Starting AssetBundle build for target " + target);
+        Debug.Log("[BuildAssetBundles] Building AssetBundles for target: " + target);
         AssetBundleManifest manifest = BuildPipeline.BuildAssetBundles(
             assetBundleDirectory,
             BuildAssetBundleOptions.None,
@@ -43,7 +43,8 @@ public class BuildAssetBundles
         );
 
         if (manifest == null) throw new Exception("[BuildAssetBundles] Build failed or returned null manifest.");
-        Debug.Log("[BuildAssetBundles] Built bundles successfully:");
+
+        Debug.Log("[BuildAssetBundles] Successfully generated bundles:");
         foreach (string b in manifest.GetAllAssetBundles())
         {
             Debug.Log("  - " + b);
