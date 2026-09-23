@@ -29,4 +29,3 @@ public class CarJointControl : UnityEngine.MonoBehaviour
     private void CheckCaput() { }
     public CarJointControl() { }
 }
-public class GlassGlobal : MonoBehaviour { }
