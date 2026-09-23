@@ -1,6 +1,9 @@
 name: Build AssetBundles
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       targetPlatform:
@@ -57,55 +60,10 @@ jobs:
           echo "Selected Target Platform: $TARGET"
           echo "TARGET_PLATFORM=$TARGET" >> "$GITHUB_ENV"
 
-      - name: Setup Build Script
+      - name: Inject Build Script
         run: |
           mkdir -p ${{ matrix.project }}/ExportedProject/Assets/Editor
-          cat << 'END_SCRIPT' > ${{ matrix.project }}/ExportedProject/Assets/Editor/BuildAssetBundles.cs
-using System;
-using System.IO;
-using UnityEditor;
-using UnityEngine;
-
-public class BuildAssetBundles
-{
-    [MenuItem("Build/Build AssetBundles")]
-    public static void BuildAllBundles()
-    {
-        string assetBundleDirectory = Path.Combine("Assets", "AssetBundles");
-        if (!Directory.Exists(assetBundleDirectory)) Directory.CreateDirectory(assetBundleDirectory);
-
-        BuildTarget target = EditorUserBuildSettings.activeBuildTarget;
-        string[] args = Environment.GetCommandLineArgs();
-        for (int i = 0; i < args.Length; i++)
-        {
-            if (args[i].Equals("-buildTarget", StringComparison.OrdinalIgnoreCase) && i + 1 < args.Length)
-            {
-                if (Enum.TryParse(args[i + 1], true, out BuildTarget parsedTarget))
-                {
-                    target = parsedTarget;
-                }
-                break;
-            }
-        }
-
-        Debug.Log("[BuildAssetBundles] Building AssetBundles for target: " + target);
-        AssetBundleManifest manifest = BuildPipeline.BuildAssetBundles(
-            assetBundleDirectory,
-            BuildAssetBundleOptions.None,
-            target
-        );
-
-        if (manifest == null) throw new Exception("[BuildAssetBundles] Build failed or returned null manifest.");
-
-        Debug.Log("[BuildAssetBundles] Successfully generated bundles:");
-        foreach (string b in manifest.GetAllAssetBundles())
-        {
-            Debug.Log("  - " + b);
-        }
-    }
-}
-
-END_SCRIPT
+          cp ci/BuildAssetBundles.cs ${{ matrix.project }}/ExportedProject/Assets/Editor/BuildAssetBundles.cs
 
       - name: Build AssetBundles with GameCI
         uses: game-ci/unity-builder@v4
