@@ -22,9 +22,9 @@ public class CarImpactCheck : UnityEngine.MonoBehaviour
     public System.Boolean damage;
     private System.Int32 playerMod;
     // Methods
-    private System.Void Start() { }
-    private System.Void Update() { }
-    private System.Void OnCollisionEnter(UnityEngine.Collision _hit) { }
-    private System.Void OnCollisionStay(UnityEngine.Collision _hit) { }
+    private void Start() { }
+    private void Update() { }
+    private void OnCollisionEnter(UnityEngine.Collision _hit) { }
+    private void OnCollisionStay(UnityEngine.Collision _hit) { }
     public CarImpactCheck() { }
 }

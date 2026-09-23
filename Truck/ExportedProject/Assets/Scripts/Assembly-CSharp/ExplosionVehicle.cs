@@ -33,8 +33,8 @@ public class ExplosionVehicle : UnityEngine.MonoBehaviour
     private System.Boolean fixV;
     private System.Boolean fixE;
     // Methods
-    private System.Void Start() { }
-    private System.Void FixedUpdate() { }
+    private void Start() { }
+    private void FixedUpdate() { }
     private System.Collections.IEnumerator Fired() { return default; }
     private System.Collections.IEnumerator Explode() { return default; }
     public ExplosionVehicle() { }

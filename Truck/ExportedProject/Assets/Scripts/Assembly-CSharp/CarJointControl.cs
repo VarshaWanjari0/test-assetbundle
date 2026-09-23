@@ -20,13 +20,13 @@ public class CarJointControl : UnityEngine.MonoBehaviour
     public System.Int32 health;
     public System.Boolean DropThisDoor;
     // Methods
-    private System.Void Awake() { }
-    private System.Void Update() { }
-    private System.Void OnCollisionEnter(UnityEngine.Collision _Hit) { }
-    public System.Void DropThisPiece() { }
-    public System.Void LockJoint() { }
-    public System.Void UnLockJoint() { }
-    private System.Void CheckCaput() { }
+    private void Awake() { }
+    private void Update() { }
+    private void OnCollisionEnter(UnityEngine.Collision _Hit) { }
+    public void DropThisPiece() { }
+    public void LockJoint() { }
+    public void UnLockJoint() { }
+    private void CheckCaput() { }
     public CarJointControl() { }
 }
 public class GlassGlobal : MonoBehaviour { }

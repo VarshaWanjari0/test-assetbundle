@@ -43,13 +43,13 @@ public class CarControl : UnityEngine.MonoBehaviour
     public System.Boolean CarSteer;
     public UnityEngine.UI.Text speedText;
     // Methods
-    private System.Void Start() { }
-    private System.Void Update() { }
-    private System.Void FixedUpdate() { }
-    private System.Void Control() { }
-    private System.Void CarLights() { }
-    private System.Void UpdateMeshesPositions() { }
-    private System.Void CarEngine() { }
-    private System.Void OnDrawGizmos() { }
+    private void Start() { }
+    private void Update() { }
+    private void FixedUpdate() { }
+    private void Control() { }
+    private void CarLights() { }
+    private void UpdateMeshesPositions() { }
+    private void CarEngine() { }
+    private void OnDrawGizmos() { }
     public CarControl() { }
 }

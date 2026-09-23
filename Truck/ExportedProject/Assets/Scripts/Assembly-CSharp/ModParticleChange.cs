@@ -9,6 +9,6 @@ public class ModParticleChange : UnityEngine.MonoBehaviour
     public UnityEngine.ParticleSystemRenderer meshRenderer;
     public System.Int32 current_mat;
     // Methods
-    private System.Void Start() { }
+    private void Start() { }
     public ModParticleChange() { }
 }

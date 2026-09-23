@@ -12,7 +12,7 @@ public class DestroyGameObject : UnityEngine.MonoBehaviour
     public System.Boolean vehicle;
     private System.Single _disFollow;
     // Methods
-    private System.Void Start() { }
-    private System.Void Update() { }
+    private void Start() { }
+    private void Update() { }
     public DestroyGameObject() { }
 }

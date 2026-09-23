@@ -8,6 +8,6 @@ public class modexplosionPrefab : UnityEngine.MonoBehaviour
     // Fields
     public ExplosionVehicle explosionVehicle;
     // Methods
-    private System.Void Start() { }
+    private void Start() { }
     public modexplosionPrefab() { }
 }

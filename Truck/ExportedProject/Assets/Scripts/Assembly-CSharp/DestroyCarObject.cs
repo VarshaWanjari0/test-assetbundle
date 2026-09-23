@@ -8,6 +8,6 @@ public class DestroyCarObject : UnityEngine.MonoBehaviour
     // Fields
     public UnityEngine.GameObject _car;
     // Methods
-    private System.Void FixedUpdate() { }
+    private void FixedUpdate() { }
     public DestroyCarObject() { }
 }

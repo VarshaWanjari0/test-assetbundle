@@ -37,17 +37,17 @@ public class RidingCar : UnityEngine.MonoBehaviour
     public System.Int32 CamDis;
     private System.Int32 playerMod;
     // Methods
-    private System.Void Start() { }
-    private System.Void Update() { }
-    private System.Void CarCamera() { }
-    private System.Void PlayerControls() { }
+    private void Start() { }
+    private void Update() { }
+    private void CarCamera() { }
+    private void PlayerControls() { }
     private System.Collections.IEnumerator RideCar() { return default; }
     private System.Collections.IEnumerator GetOffCar() { return default; }
-    private System.Void OnTriggerEnter(UnityEngine.Collider hit) { }
-    private System.Void OnCollisionEnter(UnityEngine.Collision hit) { }
-    private System.Void LoseControl() { }
-    private System.Void EnableLayerCollisions() { }
-    private System.Void DisableLayerCollisions() { }
+    private void OnTriggerEnter(UnityEngine.Collider hit) { }
+    private void OnCollisionEnter(UnityEngine.Collision hit) { }
+    private void LoseControl() { }
+    private void EnableLayerCollisions() { }
+    private void DisableLayerCollisions() { }
     public RidingCar() { }
 }
 public class PlayerControl : MonoBehaviour { }

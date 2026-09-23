@@ -13,7 +13,7 @@ public class meshRenders : UnityEngine.MonoBehaviour
     private UnityEngine.Material[] originalMaterials;
     private System.Boolean once;
     // Methods
-    public System.Void ColorCycleFunction() { }
-    public System.Void ResetColorCycle() { }
+    public void ColorCycleFunction() { }
+    public void ResetColorCycle() { }
     public meshRenders() { }
 }

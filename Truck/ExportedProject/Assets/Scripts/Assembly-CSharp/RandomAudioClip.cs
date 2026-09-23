@@ -10,6 +10,6 @@ public class RandomAudioClip : UnityEngine.MonoBehaviour
     public UnityEngine.AudioClip[] audioClips;
     public System.Boolean onlyClipChange;
     // Methods
-    private System.Void Start() { }
+    private void Start() { }
     public RandomAudioClip() { }
 }

@@ -9,6 +9,6 @@ public class MaterialChange : UnityEngine.MonoBehaviour
     public UnityEngine.MeshRenderer rend;
     public UnityEngine.Material[] mat;
     // Methods
-    public System.Void MatChange() { }
+    public void MatChange() { }
     public MaterialChange() { }
 }
