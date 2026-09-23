@@ -10,8 +10,8 @@ public class CarImpactCheck : UnityEngine.MonoBehaviour
     public UnityEngine.GameObject bodyImpactBig;
     public UnityEngine.GameObject bodyImpactSmall;
     public UnityEngine.GameObject sparkImpact;
-    private struct UnityEngine.Vector3 _contactPoint;
-    private struct UnityEngine.Vector3 _contactDirection;
+    private UnityEngine.Vector3 _contactPoint;
+    private UnityEngine.Vector3 _contactDirection;
     public UnityEngine.AudioSource crashSound;
     public UnityEngine.AudioClip[] smallCrash;
     public UnityEngine.AudioClip[] mediumCrash;

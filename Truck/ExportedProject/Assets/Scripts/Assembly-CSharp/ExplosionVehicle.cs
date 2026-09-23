@@ -15,7 +15,7 @@ public class ExplosionVehicle : UnityEngine.MonoBehaviour
     public System.Single maxTime;
     public System.Single explosionRadius;
     public System.Single explosionForce;
-    public enum explosionType type;
+    public explosionType type;
     private RidingCar ridingCar;
     private RidingJcb ridingJcb;
     private RidingTank ridingTank;

@@ -6,7 +6,7 @@ using System.Collections.Generic;
 public class CarControl : UnityEngine.MonoBehaviour
 {
     // Fields
-    public enum ControlType controlType;
+    public ControlType controlType;
     private System.Int32 Controls;
     public System.Single rpm;
     public System.Single currentSpeed;
@@ -26,7 +26,7 @@ public class CarControl : UnityEngine.MonoBehaviour
     public UnityEngine.Transform[] tireMeshes;
     public System.Boolean controlable;
     public System.Boolean gasAndBrake;
-    public enum UnityEngine.RigidbodyInterpolation bodyInterpolation;
+    public UnityEngine.RigidbodyInterpolation bodyInterpolation;
     public UnityEngine.AudioSource engineLoop;
     public UnityEngine.AudioSource engineLoad;
     public System.Int32 gear;
