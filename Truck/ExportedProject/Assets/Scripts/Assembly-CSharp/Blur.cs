@@ -6,10 +6,10 @@ using System.Collections.Generic;
 public class Blur : UnityEngine.MonoBehaviour
 {
     // Fields
-    public System.Int32 iterations;;
-    public System.Single blurSpread;;
-    public UnityEngine.Shader blurShader;;
-    private static UnityEngine.Material m_Material;;
+    public System.Int32 iterations;
+    public System.Single blurSpread;
+    public UnityEngine.Shader blurShader;
+    private static UnityEngine.Material m_Material;
     // Methods
     protected UnityEngine.Material get_material() { return default; }
     protected System.Void OnDisable() { }

@@ -6,19 +6,19 @@ using System.Collections.Generic;
 public class CarJointControl : UnityEngine.MonoBehaviour
 {
     // Fields
-    public GlassGlobal glass;;
-    public UnityEngine.HingeJoint hingJoint;;
-    public UnityEngine.Rigidbody _rigidbody;;
-    public System.Boolean isDoor;;
-    public UnityEngine.AudioClip[] doorSounds;;
-    public UnityEngine.AudioSource doorAudio;;
-    public System.Boolean swingOnX;;
-    public System.Boolean swingOnZ;;
-    public System.Boolean maxLock;;
-    private System.Single maxLimit;;
-    private System.Single minLimit;;
-    public System.Int32 health;;
-    public System.Boolean DropThisDoor;;
+    public GlassGlobal glass;
+    public UnityEngine.HingeJoint hingJoint;
+    public UnityEngine.Rigidbody _rigidbody;
+    public System.Boolean isDoor;
+    public UnityEngine.AudioClip[] doorSounds;
+    public UnityEngine.AudioSource doorAudio;
+    public System.Boolean swingOnX;
+    public System.Boolean swingOnZ;
+    public System.Boolean maxLock;
+    private System.Single maxLimit;
+    private System.Single minLimit;
+    public System.Int32 health;
+    public System.Boolean DropThisDoor;
     // Methods
     private System.Void Awake() { }
     private System.Void Update() { }
