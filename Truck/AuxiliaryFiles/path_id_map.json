@@ -1,0 +1,269 @@
+{
+  "Files": [
+    {
+      "Name": "cab-f4adf027d9e6daeedc8c809dbc879531",
+      "Assets": [
+        {
+          "PathID": -8979602706662140152,
+          "Name": "0x0D5B99D7",
+          "Type": "AudioClip"
+        },
+        {
+          "PathID": -8914491323974627900,
+          "Name": "CarImpactCheck",
+          "Type": "MonoScript"
+        },
+        {
+          "PathID": -8555506739806722432,
+          "Name": "CarControl",
+          "Type": "MonoScript"
+        },
+        {
+          "PathID": -8313828884365110753,
+          "Name": "Light",
+          "Type": "Texture2D"
+        },
+        {
+          "PathID": -8153543824309165444,
+          "Name": "color_select",
+          "Type": "MonoScript"
+        },
+        {
+          "PathID": -8083075752625459005,
+          "Name": "0x1FAED8CC",
+          "Type": "AudioClip"
+        },
+        {
+          "PathID": -7215676199853740948,
+          "Name": "Cargodoor_left",
+          "Type": "Mesh"
+        },
+        {
+          "PathID": -7212958332310177635,
+          "Name": "0x03C5E6DE",
+          "Type": "AudioClip"
+        },
+        {
+          "PathID": -7131480930523772333,
+          "Name": "0x0D7508C0",
+          "Type": "AudioClip"
+        },
+        {
+          "PathID": -7101011333195280555,
+          "Name": "JetEngine",
+          "Type": "AudioClip"
+        },
+        {
+          "PathID": -6945043937320136002,
+          "Name": "headlight_turn_on",
+          "Type": "AudioClip"
+        },
+        {
+          "PathID": -6890170550640397017,
+          "Name": "MaterialChange",
+          "Type": "MonoScript"
+        },
+        {
+          "PathID": -6433339443550805643,
+          "Name": "0x0AA69626",
+          "Type": "AudioClip"
+        },
+        {
+          "PathID": -6282812082552420251,
+          "Name": "RandomAudioClip",
+          "Type": "MonoScript"
+        },
+        {
+          "PathID": -6235136483217389487,
+          "Name": "spark",
+          "Type": "Texture2D"
+        },
+        {
+          "PathID": -5908391350172143619,
+          "Name": "headlight_turn_off",
+          "Type": "AudioClip"
+        },
+        {
+          "PathID": -5723260867196647244,
+          "Name": "Door_Right",
+          "Type": "Mesh"
+        },
+        {
+          "PathID": -5458933684097906842,
+          "Name": "ExplosionVehicle",
+          "Type": "MonoScript"
+        },
+        {
+          "PathID": -4714298609497779817,
+          "Name": "UCB_BOTTOM_DIF",
+          "Type": "Texture2D"
+        },
+        {
+          "PathID": -4662200099875968184,
+          "Name": "Steering_wheel",
+          "Type": "Mesh"
+        },
+        {
+          "PathID": -4653542796386447766,
+          "Name": "wheel_truck_stamp_spec",
+          "Type": "Texture2D"
+        },
+        {
+          "PathID": -4562335957755011121,
+          "Name": "wheel_FL",
+          "Type": "Mesh"
+        },
+        {
+          "PathID": -4463223106212782384,
+          "Name": "SkidSmoke",
+          "Type": "Texture2D"
+        },
+        {
+          "PathID": -4026736375682260780,
+          "Name": "tier_1o",
+          "Type": "Texture2D"
+        },
+        {
+          "PathID": -3489084045517987034,
+          "Name": "doorShut",
+          "Type": "AudioClip"
+        },
+        {
+          "PathID": -3371877074631240782,
+          "Name": "KillOnTrigger",
+          "Type": "MonoScript"
+        },
+        {
+          "PathID": -3324061003378830706,
+          "Name": "Color",
+          "Type": "Texture2D"
+        },
+        {
+          "PathID": -2970234580193225316,
+          "Name": "krmlgtbdy85_headlights_dif",
+          "Type": "Texture2D"
+        },
+        {
+          "PathID": -2762470528462399455,
+          "Name": "0x1C82BC63",
+          "Type": "AudioClip"
+        },
+        {
+          "PathID": -2557195905931640149,
+          "Name": "0x0A88D2EA",
+          "Type": "AudioClip"
+        },
+        {
+          "PathID": -2117370366452670176,
+          "Name": "BloomOptimized",
+          "Type": "MonoScript"
+        },
+        {
+          "PathID": -1712892928916699597,
+          "Name": "CarJointControl",
+          "Type": "MonoScript"
+        },
+        {
+          "PathID": -364422388080266720,
+          "Name": "Falloff",
+          "Type": "Texture2D"
+        },
+        {
+          "PathID": 12148751415189930,
+          "Name": "0x166C98F8",
+          "Type": "AudioClip"
+        },
+        {
+          "PathID": 889742889528339050,
+          "Name": "Blur",
+          "Type": "MonoScript"
+        },
+        {
+          "PathID": 1007664353508131106,
+          "Name": "GEN4DR_INTERIOR_dif",
+          "Type": "Texture2D"
+        },
+        {
+          "PathID": 2183943251482985906,
+          "Name": "DestroyGameObject",
+          "Type": "MonoScript"
+        },
+        {
+          "PathID": 2455202934952439053,
+          "Name": "MetalJunk",
+          "Type": "Texture2D"
+        },
+        {
+          "PathID": 3003471632245824234,
+          "Name": "ColorFlare",
+          "Type": "Texture2D"
+        },
+        {
+          "PathID": 4186949085414098725,
+          "Name": "0x17E7AF99",
+          "Type": "AudioClip"
+        },
+        {
+          "PathID": 5144692070673466588,
+          "Name": "sound_002",
+          "Type": "AudioClip"
+        },
+        {
+          "PathID": 5192784198340672502,
+          "Name": "detailedWavesMap",
+          "Type": "Texture2D"
+        },
+        {
+          "PathID": 5428579505237352782,
+          "Name": "wheel_RL",
+          "Type": "Mesh"
+        },
+        {
+          "PathID": 5847261385140532458,
+          "Name": "ModParticleChange",
+          "Type": "MonoScript"
+        },
+        {
+          "PathID": 5883975462843373501,
+          "Name": "0x0D3F052B",
+          "Type": "AudioClip"
+        },
+        {
+          "PathID": 5892983527465396855,
+          "Name": "modexplosionPrefab",
+          "Type": "MonoScript"
+        },
+        {
+          "PathID": 6880509455352143247,
+          "Name": "DestroyCarObject",
+          "Type": "MonoScript"
+        },
+        {
+          "PathID": 7162175587611359376,
+          "Name": "meshRenders",
+          "Type": "MonoScript"
+        },
+        {
+          "PathID": 7643722096007507193,
+          "Name": "DoorOpen",
+          "Type": "AudioClip"
+        },
+        {
+          "PathID": 7753056433357907827,
+          "Name": "0x0BA56386",
+          "Type": "AudioClip"
+        },
+        {
+          "PathID": 8120016711784508391,
+          "Name": "RidingCar",
+          "Type": "MonoScript"
+        },
+        {
+          "PathID": 8307658126305727027,
+          "Name": "0x0E691DD2",
+          "Type": "AudioClip"
+        }
+      ]
+    }
+  ]
+}

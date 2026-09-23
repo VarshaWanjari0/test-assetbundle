@@ -1,4 +1,4 @@
-name: Build AssetBundle
+name: Build AssetBundles
 
 on:
   workflow_dispatch:
@@ -15,8 +15,12 @@ on:
 
 jobs:
   build:
-    name: Build AssetBundles
+    name: Build AssetBundle (${{ matrix.project }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [Truck, Prop]
 
     steps:
       - name: Free Disk Space & Optimize Docker
@@ -30,7 +34,7 @@ jobs:
           sudo rm -rf /usr/share/dotnet &
           sudo rm -rf /opt/ghc &
 
-          # Maximize concurrent layer downloads for Docker (speeds up GameCI pull)
+          # Maximize concurrent layer downloads for Docker
           sudo mkdir -p /etc/docker
           echo '{"max-concurrent-downloads": 10}' | sudo tee /etc/docker/daemon.json > /dev/null
           sudo systemctl restart docker &
@@ -44,50 +48,64 @@ jobs:
         with:
           lfs: true
 
-      - name: Cache Unity Library
-        uses: actions/cache@v4
-        with:
-          path: Test/Library
-          key: Library-${{ hashFiles('Test/Assets/**', 'Test/Packages/**', 'Test/ProjectSettings/**') }}
-          restore-keys: |
-            Library-
-
       - name: Configure Target Platform
         run: |
           TARGET="${{ inputs.targetPlatform }}"
-
           if [ -z "$TARGET" ]; then
             TARGET="Android"
           fi
-
           echo "Selected Target Platform: $TARGET"
           echo "TARGET_PLATFORM=$TARGET" >> "$GITHUB_ENV"
 
-      - name: Check Unity Secrets
-        shell: bash
-        env:
-          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
-          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+      - name: Setup Build Script
         run: |
-          if [ -n "$UNITY_EMAIL" ]; then
-            echo "UNITY_EMAIL: SET"
-          else
-            echo "UNITY_EMAIL: MISSING"
-          fi
+          mkdir -p ${{ matrix.project }}/ExportedProject/Assets/Editor
+          cat << 'END_SCRIPT' > ${{ matrix.project }}/ExportedProject/Assets/Editor/BuildAssetBundles.cs
+using System;
+using System.IO;
+using UnityEditor;
+using UnityEngine;
 
-          if [ -n "$UNITY_PASSWORD" ]; then
-            echo "UNITY_PASSWORD: SET"
-          else
-            echo "UNITY_PASSWORD: MISSING"
-          fi
+public class BuildAssetBundles
+{
+    [MenuItem("Build/Build AssetBundles")]
+    public static void BuildAllBundles()
+    {
+        string assetBundleDirectory = Path.Combine("Assets", "AssetBundles");
+        if (!Directory.Exists(assetBundleDirectory)) Directory.CreateDirectory(assetBundleDirectory);
 
-          if [ -n "$UNITY_LICENSE" ]; then
-            echo "UNITY_LICENSE: SET"
-            echo "UNITY_LICENSE length: ${#UNITY_LICENSE}"
-          else
-            echo "UNITY_LICENSE: MISSING"
-          fi
+        BuildTarget target = EditorUserBuildSettings.activeBuildTarget;
+        string[] args = Environment.GetCommandLineArgs();
+        for (int i = 0; i < args.Length; i++)
+        {
+            if (args[i].Equals("-buildTarget", StringComparison.OrdinalIgnoreCase) && i + 1 < args.Length)
+            {
+                if (Enum.TryParse(args[i + 1], true, out BuildTarget parsedTarget))
+                {
+                    target = parsedTarget;
+                }
+                break;
+            }
+        }
+
+        Debug.Log("[BuildAssetBundles] Building AssetBundles for target: " + target);
+        AssetBundleManifest manifest = BuildPipeline.BuildAssetBundles(
+            assetBundleDirectory,
+            BuildAssetBundleOptions.None,
+            target
+        );
+
+        if (manifest == null) throw new Exception("[BuildAssetBundles] Build failed or returned null manifest.");
+
+        Debug.Log("[BuildAssetBundles] Successfully generated bundles:");
+        foreach (string b in manifest.GetAllAssetBundles())
+        {
+            Debug.Log("  - " + b);
+        }
+    }
+}
+
+END_SCRIPT
 
       - name: Build AssetBundles with GameCI
         uses: game-ci/unity-builder@v4
@@ -96,7 +114,7 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
         with:
-          projectPath: Test
+          projectPath: ${{ matrix.project }}/ExportedProject
           unityVersion: 2021.3.43f1
           targetPlatform: ${{ env.TARGET_PLATFORM }}
           versioning: None
@@ -105,8 +123,6 @@ jobs:
       - name: Upload Built AssetBundles
         uses: actions/upload-artifact@v4
         with:
-          name: AssetBundles-${{ env.TARGET_PLATFORM }}
-          path: |
-            Test/Assets/AssetBundles/
-            Test/Builds/
+          name: AssetBundles-${{ matrix.project }}-${{ env.TARGET_PLATFORM }}
+          path: ${{ matrix.project }}/ExportedProject/Assets/AssetBundles/
           if-no-files-found: warn

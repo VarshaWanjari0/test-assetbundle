@@ -1,0 +1,54 @@
+{
+  "Files": [
+    {
+      "Name": "cab-f4adf027d9e6daeedc8c809dbc879531",
+      "Assets": [
+        {
+          "PathID": -7717285238768373252,
+          "Name": "Image_10",
+          "Type": "Texture2D"
+        },
+        {
+          "PathID": -5988096186928842249,
+          "Name": "Object_9",
+          "Type": "Mesh"
+        },
+        {
+          "PathID": -4487881402534561490,
+          "Name": "Object_12",
+          "Type": "Mesh"
+        },
+        {
+          "PathID": -4261349987089099276,
+          "Name": "ModMe",
+          "Type": "MonoScript"
+        },
+        {
+          "PathID": -3893047106139879784,
+          "Name": "Image_0",
+          "Type": "Texture2D"
+        },
+        {
+          "PathID": -1714538192224238496,
+          "Name": "Object_10",
+          "Type": "Mesh"
+        },
+        {
+          "PathID": 4688186956962306426,
+          "Name": "Object_7",
+          "Type": "Mesh"
+        },
+        {
+          "PathID": 5574889319964754703,
+          "Name": "Object_8",
+          "Type": "Mesh"
+        },
+        {
+          "PathID": 7111031267850007116,
+          "Name": "Image_3",
+          "Type": "Texture2D"
+        }
+      ]
+    }
+  ]
+}
