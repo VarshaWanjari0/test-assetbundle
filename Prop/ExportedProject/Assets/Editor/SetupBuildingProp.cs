@@ -4,6 +4,8 @@ using System.IO;
 
 public class SetupBuildingProp
 {
+    const float S = 3.5f; // 3.5X SCALE (3-4X LARGE AS REQUESTED)
+
     [MenuItem("Tools/Build Building Prop")]
     public static void Build()
     {
@@ -11,9 +13,11 @@ public class SetupBuildingProp
         string prefabDir = Path.GetDirectoryName(prefabPath);
         if (!Directory.Exists(prefabDir)) Directory.CreateDirectory(prefabDir);
 
-        // 1. Root GameObject on Layer 20 (Props Layer in Indian Bikes Driving 3D)
+        // 1. Root GameObject on Layer 0 (Default Environment/Ground Layer)
+        // Layer 0 ensures the player's ground-check raycast detects upper floors as solid ground
+        // instead of falling infinitely through Layer 20!
         GameObject root = new GameObject("rgs");
-        root.layer = 20;
+        root.layer = 0;
 
         // Attach ModMe with Scale enabled
         ModMe mm = root.AddComponent<ModMe>();
@@ -27,19 +31,19 @@ public class SetupBuildingProp
             buildingInst.name = "Building";
             buildingInst.transform.localPosition = Vector3.zero;
             buildingInst.transform.localRotation = Quaternion.identity;
-            buildingInst.transform.localScale = Vector3.one;
+            buildingInst.transform.localScale = Vector3.one * S; // 3.5x scale
 
-            // Set Layer 20 and attach 1:1 non-convex MeshCollider to each mesh part
+            // Assign Layer 0 and attach 1:1 non-convex MeshCollider to each mesh part
             Transform[] allChildren = buildingInst.GetComponentsInChildren<Transform>(true);
             foreach (Transform t in allChildren)
             {
-                t.gameObject.layer = 20;
+                t.gameObject.layer = 0; // Layer 0 for solid ground detection
                 MeshFilter mf = t.GetComponent<MeshFilter>();
                 if (mf != null && mf.sharedMesh != null)
                 {
                     MeshCollider mc = t.gameObject.AddComponent<MeshCollider>();
                     mc.sharedMesh = mf.sharedMesh;
-                    mc.convex = false; // 1:1 EXACT NON-CONVEX COLLIDER (DOORWAYS & ROOMS OPEN)
+                    mc.convex = false; // 1:1 EXACT NON-CONVEX COLLIDER
                 }
             }
         }
@@ -71,6 +75,6 @@ public class SetupBuildingProp
         AssetImporter prefabImp = AssetImporter.GetAtPath(prefabPath);
         if (prefabImp != null) prefabImp.assetBundleName = "rgs";
 
-        Debug.Log("🎉 Successfully created enterable building prop prefab with 1:1 non-convex MeshColliders!");
+        Debug.Log("🎉 Successfully created 3.5x enterable building prop on Layer 0 with 1:1 MeshColliders!");
     }
 }
