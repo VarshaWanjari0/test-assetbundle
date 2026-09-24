@@ -30,7 +30,7 @@ public class SetupBuildingProp
             GameObject buildingInst = Object.Instantiate(buildingAsset, root.transform);
             buildingInst.name = "Building";
             buildingInst.transform.localPosition = Vector3.zero;
-            buildingInst.transform.localRotation = Quaternion.identity;
+            buildingInst.transform.localRotation = Quaternion.Euler(0f, -90f, 0f);
             buildingInst.transform.localScale = Vector3.one * S; // 3.5x scale
 
             // Assign Layer 0 and attach 1:1 non-convex MeshCollider to each mesh part
