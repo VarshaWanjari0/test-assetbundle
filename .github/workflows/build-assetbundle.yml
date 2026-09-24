@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        project: [Truck, Prop]
+        project: [Prop]
 
     steps:
       - name: Free Disk Space & Optimize Docker
