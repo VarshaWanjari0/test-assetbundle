@@ -1,0 +1,9 @@
+newmtl Base
+Kd 0.08 0.08 0.08
+newmtl Glass
+Kd 0.2 0.2 0.2
+d 0.5
+newmtl Emmission
+Kd 1 0.3 0
+newmtl Emmission.red
+Kd 1 0 0

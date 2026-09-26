@@ -27,6 +27,15 @@ public class BuildAssetBundles
 
         try
         {
+            SetupBatmobileMod.Build();
+        }
+        catch (Exception ex)
+        {
+            Debug.Log("[BuildAssetBundles] Note on SetupBatmobileMod: " + ex.Message);
+        }
+
+        try
+        {
             SetupBuildingProp.Build();
         }
         catch (Exception ex)
