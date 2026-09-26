@@ -21,7 +21,7 @@ public class SetupBatmobileMod
             Transform truckVisual = root.transform.Find("truck");
             if (truckVisual != null)
             {
-                foreach (Renderer r in truckVisual.GetComponentsInChildren<Renderer>(true))
+                foreach (Renderer rend in truckVisual.GetComponentsInChildren<Renderer>(true))
                 {
                     r.enabled = false;
                 }
@@ -37,11 +37,11 @@ public class SetupBatmobileMod
             }
 
             // 2. Adjust Wheel Colliders & Meshes (radius = 0.71m)
-            float r = 0.71f;
-            SetWheel(root, "Wheel collider/Col FL", "Wheel Model/FL", new Vector3(-2.11f, 0.79f, 3.82f), r, "Assets/Models/wheel_FL.obj");
-            SetWheel(root, "Wheel collider/Col FR", "Wheel Model/FR", new Vector3(2.11f, 0.79f, 3.82f), r, "Assets/Models/wheel_FR.obj");
-            SetWheel(root, "Wheel collider/Col RL", "Wheel Model/RL", new Vector3(-2.52f, 0.79f, -3.16f), r, "Assets/Models/wheel_RL.obj");
-            SetWheel(root, "Wheel collider/Col RR", "Wheel Model/RR", new Vector3(2.52f, 0.79f, -3.16f), r, "Assets/Models/wheel_RR.obj");
+            float wheelRadius = 0.71f;
+            SetWheel(root, "Wheel collider/Col FL", "Wheel Model/FL", new Vector3(-2.11f, 0.79f, 3.82f), wheelRadius, "Assets/Models/wheel_FL.obj");
+            SetWheel(root, "Wheel collider/Col FR", "Wheel Model/FR", new Vector3(2.11f, 0.79f, 3.82f), wheelRadius, "Assets/Models/wheel_FR.obj");
+            SetWheel(root, "Wheel collider/Col RL", "Wheel Model/RL", new Vector3(-2.52f, 0.79f, -3.16f), wheelRadius, "Assets/Models/wheel_RL.obj");
+            SetWheel(root, "Wheel collider/Col RR", "Wheel Model/RR", new Vector3(2.52f, 0.79f, -3.16f), wheelRadius, "Assets/Models/wheel_RR.obj");
 
             // 3. Adjust Interaction Points & Cameras on Layer 9
             Transform doorPos = root.transform.Find("DoorPos");
@@ -120,7 +120,7 @@ public class SetupBatmobileMod
         if (m != null)
         {
             m.localPosition = pos;
-            foreach (Renderer r in m.GetComponentsInChildren<Renderer>(true)) r.enabled = false;
+            foreach (Renderer rend in m.GetComponentsInChildren<Renderer>(true)) r.enabled = false;
             GameObject asset = AssetDatabase.LoadAssetAtPath<GameObject>(modelAsset);
             if (asset != null)
             {

@@ -34,14 +34,7 @@ public class BuildAssetBundles
             Debug.Log("[BuildAssetBundles] Note on SetupBatmobileMod: " + ex.Message);
         }
 
-        try
-        {
-            SetupBuildingProp.Build();
-        }
-        catch (Exception ex)
-        {
-            Debug.Log("[BuildAssetBundles] Note on SetupBuildingProp: " + ex.Message);
-        }
+        
 
         Debug.Log("[BuildAssetBundles] Building AssetBundles for target: " + target);
         AssetBundleManifest manifest = BuildPipeline.BuildAssetBundles(
