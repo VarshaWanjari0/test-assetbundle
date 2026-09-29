@@ -4,7 +4,7 @@ using System.IO;
 
 public class SetupBuildingProp
 {
-    const float S = 1.0f; // Native GLB scale (ModMe allows further scaling in-game)
+    const float S = 2.75f; // 2.5x-3x scale as requested
 
     [MenuItem("Tools/Build Building Prop")]
     public static void Build()
@@ -29,8 +29,8 @@ public class SetupBuildingProp
             GameObject buildingInst = Object.Instantiate(buildingAsset, root.transform);
             buildingInst.name = "Building";
             buildingInst.transform.localPosition = Vector3.zero;
-            buildingInst.transform.localRotation = Quaternion.identity;
-            buildingInst.transform.localScale = Vector3.one * S;
+            buildingInst.transform.localRotation = Quaternion.Euler(0f, 180f, 0f); // Rotated 180 degrees in Y
+            buildingInst.transform.localScale = Vector3.one * S; // 2.75x scale
 
             // Assign Layer 0 and attach 1:1 non-convex MeshCollider to each mesh part
             Transform[] allChildren = buildingInst.GetComponentsInChildren<Transform>(true);
@@ -71,6 +71,6 @@ public class SetupBuildingProp
         prefabImp = AssetImporter.GetAtPath(prefabPath);
         if (prefabImp != null) prefabImp.assetBundleName = "rgs";
 
-        Debug.Log("🎉 Successfully configured house_modern prop on Layer 0 with 1:1 MeshColliders and ModMe!");
+        Debug.Log("🎉 Successfully configured house_modern prop (Scale: 2.75x, RotY: 180 deg) on Layer 0 with 1:1 MeshColliders and ModMe!");
     }
 }
