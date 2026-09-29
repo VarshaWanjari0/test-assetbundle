@@ -4,7 +4,7 @@ using System.IO;
 
 public class SetupBuildingProp
 {
-    const float S = 3.5f; // 3.5X SCALE (3-4X LARGE AS REQUESTED)
+    const float S = 1.0f; // Native GLB scale (ModMe allows further scaling in-game)
 
     [MenuItem("Tools/Build Building Prop")]
     public static void Build()
@@ -14,8 +14,7 @@ public class SetupBuildingProp
         if (!Directory.Exists(prefabDir)) Directory.CreateDirectory(prefabDir);
 
         // 1. Root GameObject on Layer 0 (Default Environment/Ground Layer)
-        // Layer 0 ensures the player's ground-check raycast detects upper floors as solid ground
-        // instead of falling infinitely through Layer 20!
+        // Layer 0 ensures player ground-check raycast detects all floors as solid ground
         GameObject root = new GameObject("rgs");
         root.layer = 0;
 
@@ -30,8 +29,8 @@ public class SetupBuildingProp
             GameObject buildingInst = Object.Instantiate(buildingAsset, root.transform);
             buildingInst.name = "Building";
             buildingInst.transform.localPosition = Vector3.zero;
-            buildingInst.transform.localRotation = Quaternion.Euler(0f, -90f, 0f);
-            buildingInst.transform.localScale = Vector3.one * S; // 3.5x scale
+            buildingInst.transform.localRotation = Quaternion.identity;
+            buildingInst.transform.localScale = Vector3.one * S;
 
             // Assign Layer 0 and attach 1:1 non-convex MeshCollider to each mesh part
             Transform[] allChildren = buildingInst.GetComponentsInChildren<Transform>(true);
@@ -53,18 +52,15 @@ public class SetupBuildingProp
         }
 
         // 3. Tag all assets into 'rgs' AssetBundle
-        string[] allAssets = new string[] {
-            prefabPath,
-            "Assets/Models/building.obj",
-            "Assets/Models/material.mtl",
-            "Assets/Models/Concrete1.png",
-            "Assets/Models/Wall1.png",
-            "Assets/Models/Wall2.png",
-            "Assets/Models/Glass.png"
-        };
-        foreach (string ap in allAssets)
+        AssetImporter prefabImp = AssetImporter.GetAtPath(prefabPath);
+        if (prefabImp != null) prefabImp.assetBundleName = "rgs";
+
+        string[] modelFiles = Directory.GetFiles("Assets/Models", "*.*", SearchOption.AllDirectories);
+        foreach (string file in modelFiles)
         {
-            AssetImporter imp = AssetImporter.GetAtPath(ap);
+            if (file.EndsWith(".meta")) continue;
+            string unityPath = file.Replace('\\', '/');
+            AssetImporter imp = AssetImporter.GetAtPath(unityPath);
             if (imp != null) imp.assetBundleName = "rgs";
         }
 
@@ -72,9 +68,9 @@ public class SetupBuildingProp
         PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
         Object.DestroyImmediate(root);
 
-        AssetImporter prefabImp = AssetImporter.GetAtPath(prefabPath);
+        prefabImp = AssetImporter.GetAtPath(prefabPath);
         if (prefabImp != null) prefabImp.assetBundleName = "rgs";
 
-        Debug.Log("🎉 Successfully created 3.5x enterable building prop on Layer 0 with 1:1 MeshColliders!");
+        Debug.Log("🎉 Successfully configured house_modern prop on Layer 0 with 1:1 MeshColliders and ModMe!");
     }
 }
