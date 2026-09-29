@@ -25,6 +25,9 @@ public class SetupBatmobileMod
                 {
                     rend.enabled = false;
                 }
+                Transform prevBody = truckVisual.Find("Batmobile_Body");
+                if (prevBody != null) Object.DestroyImmediate(prevBody.gameObject);
+
                 GameObject bodyAsset = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Models/batmobile_body.obj");
                 if (bodyAsset != null)
                 {
@@ -150,6 +153,9 @@ public class SetupBatmobileMod
             {
                 rend.enabled = false;
             }
+            Transform prevInst = m.Find("WheelMesh");
+            if (prevInst != null) Object.DestroyImmediate(prevInst.gameObject);
+
             GameObject asset = AssetDatabase.LoadAssetAtPath<GameObject>(modelAsset);
             if (asset != null)
             {
