@@ -1,6 +1,8 @@
+using System;
+using System.IO;
 using UnityEditor;
 using UnityEngine;
-using System.IO;
+using Object = UnityEngine.Object;
 
 public class SetupBatmobileMod
 {
@@ -14,57 +16,110 @@ public class SetupBatmobileMod
             return;
         }
 
+        // Tag all model assets first so AssetDatabase imports them with sub-meshes
+        string[] modelFiles = new string[] {
+            "Assets/Models/batmobile_body.obj",
+            "Assets/Models/wheel_FL.obj",
+            "Assets/Models/wheel_FR.obj",
+            "Assets/Models/wheel_RL.obj",
+            "Assets/Models/wheel_RR.obj"
+        };
+
+        foreach (string mf in modelFiles)
+        {
+            AssetDatabase.ImportAsset(mf, ImportAssetOptions.ForceUpdate);
+        }
+
         GameObject root = PrefabUtility.LoadPrefabContents(prefabPath);
         try
         {
-            // 1. Swap Truck Body Mesh
-            Transform truckVisual = root.transform.Find("truck");
-            if (truckVisual != null)
-            {
-                foreach (Renderer rend in truckVisual.GetComponentsInChildren<Renderer>(true))
-                {
-                    rend.enabled = false;
-                }
-                Transform prevBody = truckVisual.Find("Batmobile_Body");
-                if (prevBody != null) Object.DestroyImmediate(prevBody.gameObject);
+            Debug.Log("[SetupBatmobileMod] Configuring Batmobile on rgs.prefab...");
 
-                GameObject bodyAsset = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Models/batmobile_body.obj");
-                if (bodyAsset != null)
+            // 1. Swap Truck Body Mesh on carzyCar/truck/Cargodoor_left
+            Transform carzyCar = root.transform.Find("carzyCar");
+            if (carzyCar != null)
+            {
+                carzyCar.localPosition = Vector3.zero;
+                carzyCar.localRotation = Quaternion.identity;
+                carzyCar.localScale = Vector3.one;
+
+                Transform truck = carzyCar.Find("truck");
+                if (truck != null)
                 {
-                    GameObject bodyInst = Object.Instantiate(bodyAsset, truckVisual);
-                    bodyInst.name = "Batmobile_Body";
-                    bodyInst.transform.localPosition = Vector3.zero;
-                    bodyInst.transform.localRotation = Quaternion.identity;
-                    bodyInst.transform.localScale = Vector3.one;
-                    SetLayerRecursively(bodyInst, 9);
+                    truck.localPosition = Vector3.zero;
+                    truck.localRotation = Quaternion.identity;
+                    truck.localScale = Vector3.one;
+
+                    Transform body = truck.Find("Cargodoor_left");
+                    if (body != null)
+                    {
+                        body.localPosition = Vector3.zero;
+                        body.localRotation = Quaternion.identity;
+                        body.localScale = Vector3.one;
+
+                        Mesh bodyMesh = GetMeshFromAsset("Assets/Models/batmobile_body.obj");
+                        if (bodyMesh != null)
+                        {
+                            MeshFilter mf = body.GetComponent<MeshFilter>();
+                            if (mf != null) mf.sharedMesh = bodyMesh;
+
+                            MeshRenderer mr = body.GetComponent<MeshRenderer>();
+                            if (mr != null)
+                            {
+                                mr.enabled = true;
+                                Material bodyMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/Material/Body_white.mat");
+                                if (bodyMat != null) mr.sharedMaterials = new Material[] { bodyMat };
+                            }
+                            Debug.Log("[SetupBatmobileMod] Body mesh assigned successfully!");
+                        }
+                    }
                 }
             }
 
-            // 2. Adjust Wheel Colliders & Meshes (radius = 0.71m)
+            // 2. Setup 4 Wheels with calibrated positions and sharedMesh assignment
             float wheelRadius = 0.71f;
-            SetWheel(root, "Wheel collider/Col FL", "Wheel Model/FL", new Vector3(-2.19f, 0.79f, 3.82f), wheelRadius, "Assets/Models/wheel_FL.obj");
-            SetWheel(root, "Wheel collider/Col FR", "Wheel Model/FR", new Vector3( 2.19f, 0.79f, 3.82f), wheelRadius, "Assets/Models/wheel_FR.obj");
-            SetWheel(root, "Wheel collider/Col RL", "Wheel Model/RL", new Vector3(-2.61f, 0.79f, -3.16f), wheelRadius, "Assets/Models/wheel_RL.obj");
-            SetWheel(root, "Wheel collider/Col RR", "Wheel Model/RR", new Vector3( 2.61f, 0.79f, -3.16f), wheelRadius, "Assets/Models/wheel_RR.obj");
+            Vector3 posFL = new Vector3(-2.13f, 0.79f, 3.82f);
+            Vector3 posFR = new Vector3( 2.13f, 0.79f, 3.82f);
+            Vector3 posRL = new Vector3(-2.54f, 0.79f, -3.16f);
+            Vector3 posRR = new Vector3( 2.54f, 0.79f, -3.16f);
 
-            // 3. Adjust Interaction Points & Cameras on Layer 9
+            SetupWheel(root, "Wheel collider/Col FL", "Wheel Model/FL", "wheel_FL", posFL, wheelRadius, "Assets/Models/wheel_FL.obj");
+            SetupWheel(root, "Wheel collider/Col FR", "Wheel Model/FR", "wheel_FL", posFR, wheelRadius, "Assets/Models/wheel_FR.obj");
+            SetupWheel(root, "Wheel collider/Col RL", "Wheel Model/RL", "wheel_RL", posRL, wheelRadius, "Assets/Models/wheel_RL.obj");
+            SetupWheel(root, "Wheel collider/Col RR", "Wheel Model/RR", "wheel_RL", posRR, wheelRadius, "Assets/Models/wheel_RR.obj");
+
+            // 3. Hide old truck doors so they do not overlap
+            Transform doorFL = root.transform.Find("Doors/DoorFL/Door_Right");
+            if (doorFL != null)
+            {
+                MeshRenderer mr = doorFL.GetComponent<MeshRenderer>();
+                if (mr != null) mr.enabled = false;
+            }
+            Transform doorFR = root.transform.Find("Doors/DoorFR/Door_Right (1)");
+            if (doorFR != null)
+            {
+                MeshRenderer mr = doorFR.GetComponent<MeshRenderer>();
+                if (mr != null) mr.enabled = false;
+            }
+
+            // 4. Cockpit & Interaction Points
             Transform doorPos = root.transform.Find("DoorPos");
             if (doorPos != null) doorPos.localPosition = new Vector3(2.60f, 0.25f, -0.40f);
 
             Transform sitPos = root.transform.Find("SitPosL");
-            if (sitPos != null) sitPos.localPosition = new Vector3(0.45f, 1.00f, -0.40f);
+            if (sitPos != null) sitPos.localPosition = new Vector3(0.45f, 1.05f, -0.40f);
 
-            Transform interiorCam = root.transform.Find("InteriorCam");
+            Transform interiorCam = root.transform.Find("Interior/InteriorCam");
             if (interiorCam != null) interiorCam.localPosition = new Vector3(0.45f, 1.35f, -0.35f);
 
             Transform cam = root.transform.Find("Cam");
             if (cam != null) cam.localPosition = new Vector3(0.0f, 3.20f, -7.50f);
 
-            Transform doorFR = root.transform.Find("Doors/DoorFR");
-            if (doorFR != null) doorFR.localPosition = new Vector3(2.20f, 0.80f, -0.40f);
+            Transform steerDummy = root.transform.Find("steering_dummy");
+            if (steerDummy != null) steerDummy.localPosition = new Vector3(0.45f, 1.20f, -0.10f);
 
-            Transform steerDummy = root.transform.Find("Interior/steering_dummy");
-            if (steerDummy != null) steerDummy.localPosition = new Vector3(0.45f, 1.25f, 0.10f);
+            Transform smoke = root.transform.Find("ExhustedSmoke (1)");
+            if (smoke != null) smoke.localPosition = new Vector3(0.0f, 0.90f, -6.10f); // Turbine exhaust
 
             Transform playerProtect = root.transform.Find("Player Protect");
             if (playerProtect != null)
@@ -79,55 +134,45 @@ public class SetupBatmobileMod
             }
 
             Transform triggerKill = root.transform.Find("TriggerKill");
-            if (triggerKill != null)
-            {
-                triggerKill.localPosition = new Vector3(0.0f, 0.70f, 5.80f);
-            }
+            if (triggerKill != null) triggerKill.localPosition = new Vector3(0.0f, 0.70f, 5.80f);
 
-            // 4. Update Colliders on Root
+            // 5. Root Colliders (Main chassis + Door entry trigger)
             BoxCollider[] colliders = root.GetComponents<BoxCollider>();
             int nonTriggerCount = 0;
             foreach (var col in colliders)
             {
                 if (col.isTrigger)
                 {
-                    // Door entry trigger: placed at doorPos on the right
-                    col.center = new Vector3(2.60f, 0.90f, -0.40f);
+                    col.center = new Vector3(2.60f, 0.80f, -0.40f);
                     col.size = new Vector3(1.80f, 1.50f, 2.00f);
                 }
                 else
                 {
                     if (nonTriggerCount == 0)
                     {
-                        col.center = new Vector3(0.00f, 1.20f, 0.00f);
+                        col.center = new Vector3(0.0f, 1.20f, 0.0f);
                         col.size = new Vector3(3.60f, 1.80f, 11.50f);
                         nonTriggerCount++;
                     }
                     else
                     {
-                        col.size = Vector3.zero; // Disable extra upper truck collider
+                        col.size = Vector3.zero;
                     }
                 }
             }
 
-            // 5. Tag all assets into AssetBundle 'rgs'
-            string[] assets = new string[] {
-                prefabPath,
-                "Assets/Models/batmobile_body.obj",
-                "Assets/Models/batmobile.mtl",
-                "Assets/Models/wheel_FL.obj",
-                "Assets/Models/wheel_FR.obj",
-                "Assets/Models/wheel_RL.obj",
-                "Assets/Models/wheel_RR.obj"
-            };
-            foreach (string a in assets)
+            // 6. Tag all assets into AssetBundle 'rgs'
+            string[] allFiles = Directory.GetFiles("Assets", "*.*", SearchOption.AllDirectories);
+            foreach (string file in allFiles)
             {
-                AssetImporter imp = AssetImporter.GetAtPath(a);
+                if (file.EndsWith(".meta") || file.EndsWith(".cs") || file.EndsWith(".unity")) continue;
+                string uPath = file.Replace('\\', '/');
+                AssetImporter imp = AssetImporter.GetAtPath(uPath);
                 if (imp != null) imp.assetBundleName = "rgs";
             }
 
             PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
-            Debug.Log("[SetupBatmobileMod] Successfully saved Batmobile rgs.prefab!");
+            Debug.Log("[SetupBatmobileMod] 🎉 Successfully configured Batmobile rgs.prefab!");
         }
         finally
         {
@@ -135,7 +180,7 @@ public class SetupBatmobileMod
         }
     }
 
-    private static void SetWheel(GameObject root, string colPath, string modelPath, Vector3 pos, float radius, string modelAsset)
+    private static void SetupWheel(GameObject root, string colPath, string modelPath, string meshChildName, Vector3 pos, float radius, string modelAsset)
     {
         Transform col = root.transform.Find(colPath);
         if (col != null)
@@ -149,32 +194,54 @@ public class SetupBatmobileMod
         if (m != null)
         {
             m.localPosition = pos;
-            foreach (Renderer rend in m.GetComponentsInChildren<Renderer>(true))
-            {
-                rend.enabled = false;
-            }
-            Transform prevInst = m.Find("WheelMesh");
-            if (prevInst != null) Object.DestroyImmediate(prevInst.gameObject);
+            m.localRotation = Quaternion.identity;
+            m.localScale = Vector3.one;
 
-            GameObject asset = AssetDatabase.LoadAssetAtPath<GameObject>(modelAsset);
-            if (asset != null)
+            Transform child = m.Find(meshChildName);
+            if (child != null)
             {
-                GameObject inst = Object.Instantiate(asset, m);
-                inst.name = "WheelMesh";
-                inst.transform.localPosition = Vector3.zero;
-                inst.transform.localRotation = Quaternion.identity;
-                inst.transform.localScale = Vector3.one;
-                SetLayerRecursively(inst, 9);
+                child.localPosition = Vector3.zero;
+                child.localRotation = Quaternion.identity;
+                child.localScale = Vector3.one;
+
+                Mesh mesh = GetMeshFromAsset(modelAsset);
+                if (mesh != null)
+                {
+                    MeshFilter mf = child.GetComponent<MeshFilter>();
+                    if (mf != null) mf.sharedMesh = mesh;
+
+                    MeshRenderer mr = child.GetComponent<MeshRenderer>();
+                    if (mr != null)
+                    {
+                        mr.enabled = true;
+                        Material tireMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/Material/tier_1o.mat");
+                        Material rimMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/Material/wheel_truck_stamp_spec.mat");
+                        if (tireMat != null && rimMat != null)
+                        {
+                            mr.sharedMaterials = new Material[] { tireMat, rimMat };
+                        }
+                    }
+                    Debug.Log("[SetupBatmobileMod] Assigned wheel mesh to " + modelPath + "/" + meshChildName);
+                }
             }
         }
     }
 
-    private static void SetLayerRecursively(GameObject obj, int layer)
+    private static Mesh GetMeshFromAsset(string path)
     {
-        obj.layer = layer;
-        foreach (Transform child in obj.transform)
+        Object[] assets = AssetDatabase.LoadAllAssetsAtPath(path);
+        foreach (Object obj in assets)
         {
-            SetLayerRecursively(child.gameObject, layer);
+            if (obj is Mesh m && !string.IsNullOrEmpty(m.name))
+            {
+                return m;
+            }
         }
+        foreach (Object obj in assets)
+        {
+            if (obj is Mesh m) return m;
+        }
+        Debug.LogError("No Mesh found at: " + path);
+        return null;
     }
 }
