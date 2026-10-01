@@ -33,7 +33,7 @@ public class SetupBatmobileMod
         GameObject root = PrefabUtility.LoadPrefabContents(prefabPath);
         try
         {
-            Debug.Log("[SetupBatmobileMod] Configuring Batmobile at 75% size with accurate hitbox and right-side sit area...");
+            Debug.Log("[SetupBatmobileMod] Configuring Batmobile from working baseline with stable sit button and proper seating...");
 
             // 1. Swap Truck Body Mesh on carzyCar/truck/Cargodoor_left
             Transform carzyCar = root.transform.Find("carzyCar");
@@ -53,7 +53,7 @@ public class SetupBatmobileMod
                     Transform body = truck.Find("Cargodoor_left");
                     if (body != null)
                     {
-                        body.localPosition = new Vector3(0.0f, 0.18f, 0.0f); // Balanced elevation for rough terrain and realistic wheel fit
+                        body.localPosition = new Vector3(0.0f, 0.10f, 0.0f);
                         body.localRotation = Quaternion.identity;
                         body.localScale = Vector3.one;
 
@@ -117,47 +117,47 @@ public class SetupBatmobileMod
                 }
             }
 
-            // 4. Invisible rear cockpit seating (5m lower so player doesn't sit awkwardly on top/outside car)
-            Vector3 invisibleSitPos = new Vector3(0.0f, -3.90f, -1.80f);
+            // 4. Cockpit Seating: Tucked cleanly inside the cockpit floorpan (0.45m above ground, NOT subterranean!)
+            Vector3 cockpitSitPos = new Vector3(0.0f, 0.45f, -1.80f);
             Transform sitPos = root.transform.Find("SitPosL");
-            if (sitPos != null) sitPos.localPosition = invisibleSitPos;
+            if (sitPos != null) sitPos.localPosition = cockpitSitPos;
 
             Transform leftFoot = root.transform.Find("LeftFoot");
-            if (leftFoot != null) leftFoot.localPosition = invisibleSitPos;
+            if (leftFoot != null) leftFoot.localPosition = cockpitSitPos;
 
             Transform rightFoot = root.transform.Find("RightFoot");
-            if (rightFoot != null) rightFoot.localPosition = invisibleSitPos;
+            if (rightFoot != null) rightFoot.localPosition = cockpitSitPos;
 
             Transform interior = root.transform.Find("Interior");
-            if (interior != null) interior.localPosition = invisibleSitPos;
+            if (interior != null) interior.localPosition = cockpitSitPos;
 
             Transform interiorCam = root.transform.Find("Interior/InteriorCam");
-            if (interiorCam != null) interiorCam.localPosition = new Vector3(0.0f, 1.80f, 0.0f);
+            if (interiorCam != null) interiorCam.localPosition = new Vector3(0.0f, 1.60f, 0.0f);
 
             Transform playerProtect = root.transform.Find("Player Protect");
             if (playerProtect != null)
             {
-                playerProtect.localPosition = invisibleSitPos;
+                playerProtect.localPosition = new Vector3(0.0f, 1.00f, -1.80f);
                 BoxCollider ppCol = playerProtect.GetComponent<BoxCollider>();
                 if (ppCol != null)
                 {
-                    ppCol.center = Vector3.zero;
-                    ppCol.size = new Vector3(1.20f, 1.20f, 1.20f);
+                    // Disable player protect collider so it NEVER collides with or trips the player
+                    ppCol.enabled = false;
                 }
             }
 
-            // 5. 2.5x-3x Large DoorPos & Right-Side Sit Area
-            Vector3 doorPosition = new Vector3(2.50f, 0.40f, 0.30f);
+            // 5. Stable Right-Side Door Entry Area & Co-located DoorPos (From Last Working Version)
+            Vector3 doorPosition = new Vector3(2.00f, 0.25f, 0.30f);
             Transform doorPos = root.transform.Find("DoorPos");
             if (doorPos != null)
             {
                 doorPos.localPosition = doorPosition;
-                doorPos.localScale = new Vector3(3.0f, 3.0f, 3.0f); // 3x scale as requested
+                doorPos.localScale = Vector3.one; // Standard scale so distance checks work 100% reliably
             }
 
-            // Camera Look-at Pivot: Geometric center of vehicle (0, 1.80, 0)
+            // Camera Look-at Pivot: Geometric center of vehicle (0, 1.60, 0)
             Transform cam = root.transform.Find("Cam");
-            if (cam != null) cam.localPosition = new Vector3(0.0f, 1.80f, 0.0f);
+            if (cam != null) cam.localPosition = new Vector3(0.0f, 1.60f, 0.0f);
 
             RidingCar rc = root.GetComponent<RidingCar>();
             if (rc != null) rc.CamDis = 14; // Framed for 11.4m vehicle
@@ -186,9 +186,9 @@ public class SetupBatmobileMod
 
             // Rear jet exhaust particle
             Transform smoke = root.transform.Find("ExhustedSmoke (1)");
-            if (smoke != null) smoke.localPosition = new Vector3(0.0f, 1.35f, -5.70f);
+            if (smoke != null) smoke.localPosition = new Vector3(0.0f, 1.00f, -5.70f);
 
-            // Front bumper kill trigger on NPCs
+            // Front bumper kill trigger on NPCs (reset localPosition to zero so it doesn't double-offset)
             Transform triggerKill = root.transform.Find("TriggerKill");
             if (triggerKill != null)
             {
@@ -201,9 +201,11 @@ public class SetupBatmobileMod
                 }
             }
 
-            // 6. Solid Hitboxes Reaching Ground Level & 2.5x-3x Large Sit Trigger
-            // Full height from Y = 0.40m up to 2.45m so player NEVER walks under or falls on touching the car!
-            // Rear collider tightly ends at Z = -4.90m so NO free space ghost hitbox behind the car.
+            // 6. Solid Hitboxes & Right-Side Sit Trigger (From Last Working Version)
+            // Solid colliders strictly INSET inside the 3D visual mesh:
+            // - Mid body collider width 3.00m (inside 3.10m car body). Player walks directly to door with zero barrier!
+            // - Front nose collider width 3.40m inside hood.
+            // - Rear chassis collider width 3.80m, ending at Z = -4.90m (zero free-space overhang behind car).
             List<BoxCollider> solidCols = new List<BoxCollider>();
             BoxCollider triggerCol = null;
 
@@ -225,9 +227,9 @@ public class SetupBatmobileMod
                 triggerCol.isTrigger = true;
             }
 
-            // Generous 2.5x-3x sit trigger covering the entire right side of the car
-            triggerCol.center = new Vector3(2.50f, 0.80f, 0.30f);
-            triggerCol.size = new Vector3(4.20f, 2.20f, 6.00f);
+            // Trigger identical to proven working version 8969078
+            triggerCol.center = new Vector3(2.20f, 0.80f, 0.30f);
+            triggerCol.size = new Vector3(2.60f, 1.80f, 3.00f);
 
             while (solidCols.Count < 3)
             {
@@ -236,17 +238,17 @@ public class SetupBatmobileMod
                 solidCols.Add(newSolid);
             }
 
-            // Collider 1: Front Nose & Hood (height 1.80m, bottom at 0.40m, player never falls)
-            solidCols[0].center = new Vector3(0.0f, 1.30f, 3.80f);
-            solidCols[0].size = new Vector3(3.60f, 1.80f, 3.20f);
+            // Collider 1: Front Nose & Hood
+            solidCols[0].center = new Vector3(0.0f, 1.15f, 4.00f);
+            solidCols[0].size = new Vector3(3.40f, 1.00f, 3.00f);
 
-            // Collider 2: Mid Body & Cabin (height 2.00m, bottom at 0.40m, width 3.30m solid protection)
-            solidCols[1].center = new Vector3(0.0f, 1.40f, 0.50f);
-            solidCols[1].size = new Vector3(3.30f, 2.00f, 3.80f);
+            // Collider 2: Mid Body & Cabin (width 3.00m allows player to reach door position 2.00m without tripping)
+            solidCols[1].center = new Vector3(0.0f, 1.45f, 0.70f);
+            solidCols[1].size = new Vector3(3.00f, 1.60f, 3.80f);
 
-            // Collider 3: Rear Body & Fins (height 2.00m, bottom at 0.45m, ends at Z = -4.90m, zero overhang)
+            // Collider 3: Rear Body & Fins (tightly stops at Z = -4.90m, zero overhang)
             solidCols[2].center = new Vector3(0.0f, 1.45f, -3.10f);
-            solidCols[2].size = new Vector3(3.80f, 2.00f, 3.60f);
+            solidCols[2].size = new Vector3(3.80f, 1.60f, 3.60f);
 
             for (int i = 3; i < solidCols.Count; i++)
             {
@@ -264,7 +266,7 @@ public class SetupBatmobileMod
             }
 
             PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
-            Debug.Log("[SetupBatmobileMod] 🎉 Successfully configured Batmobile at 75% size with accurate hitbox and right-side sit area!");
+            Debug.Log("[SetupBatmobileMod] 🎉 Successfully configured Batmobile from working baseline!");
         }
         finally
         {
@@ -282,11 +284,11 @@ public class SetupBatmobileMod
             if (wc != null)
             {
                 wc.radius = radius;
-                wc.suspensionDistance = 0.40f; // Long travel suspension for rough terrain and steep slopes
+                wc.suspensionDistance = 0.30f;
                 JointSpring js = wc.suspensionSpring;
-                js.spring = 65000f; // Stiffer spring prevents bottoming out
-                js.damper = 7500f;
-                js.targetPosition = 0.30f;
+                js.spring = 55000f;
+                js.damper = 6500f;
+                js.targetPosition = 0.40f;
                 wc.suspensionSpring = js;
             }
         }
