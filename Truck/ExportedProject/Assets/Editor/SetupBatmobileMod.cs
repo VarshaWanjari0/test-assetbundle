@@ -53,7 +53,7 @@ public class SetupBatmobileMod
                     Transform body = truck.Find("Cargodoor_left");
                     if (body != null)
                     {
-                        body.localPosition = Vector3.zero;
+                        body.localPosition = new Vector3(0.0f, 0.35f, 0.0f); // Elevate body for rough terrain and steeps
                         body.localRotation = Quaternion.identity;
                         body.localScale = Vector3.one;
 
@@ -117,8 +117,8 @@ public class SetupBatmobileMod
                 }
             }
 
-            // 4. Invisible rear cockpit seating
-            Vector3 invisibleSitPos = new Vector3(0.0f, 1.10f, -1.80f);
+            // 4. Invisible rear cockpit seating (5m lower so player doesn't sit awkwardly on top/outside car)
+            Vector3 invisibleSitPos = new Vector3(0.0f, -3.90f, -1.80f);
             Transform sitPos = root.transform.Find("SitPosL");
             if (sitPos != null) sitPos.localPosition = invisibleSitPos;
 
@@ -132,7 +132,7 @@ public class SetupBatmobileMod
             if (interior != null) interior.localPosition = invisibleSitPos;
 
             Transform interiorCam = root.transform.Find("Interior/InteriorCam");
-            if (interiorCam != null) interiorCam.localPosition = new Vector3(0.0f, 0.30f, 0.10f);
+            if (interiorCam != null) interiorCam.localPosition = new Vector3(0.0f, 1.80f, 0.0f);
 
             Transform playerProtect = root.transform.Find("Player Protect");
             if (playerProtect != null)
@@ -147,25 +147,44 @@ public class SetupBatmobileMod
             }
 
             // 5. Stable Right-Side Door Entry Area & Co-located DoorPos
-            // Placing DoorPos at (2.00, 0.25, 0.30) right beside the car body (X = 1.55m)
-            // Trigger reaches X = 0.90m to 3.50m, Z = -1.20m to 1.80m
-            // Max distance from any point in trigger to DoorPos is <= 2.13m (< 2.5m cutoff)
-            Vector3 doorPosition = new Vector3(2.00f, 0.25f, 0.30f);
+            Vector3 doorPosition = new Vector3(2.00f, 0.35f, 0.30f);
             Transform doorPos = root.transform.Find("DoorPos");
             if (doorPos != null) doorPos.localPosition = doorPosition;
 
-            // Camera Look-at Pivot: Geometric center of vehicle (0, 1.60, 0)
+            // Camera Look-at Pivot: Geometric center of vehicle (0, 1.80, 0)
             Transform cam = root.transform.Find("Cam");
-            if (cam != null) cam.localPosition = new Vector3(0.0f, 1.60f, 0.0f);
+            if (cam != null) cam.localPosition = new Vector3(0.0f, 1.80f, 0.0f);
 
             RidingCar rc = root.GetComponent<RidingCar>();
             if (rc != null) rc.CamDis = 14; // Framed for 11.4m vehicle
 
+            // 5b. Indestructibility & Extreme 5000 Speed / Reverse
+            CarControl cc = root.GetComponent<CarControl>();
+            if (cc != null)
+            {
+                cc.topSpeed = 5000f;
+                cc.reverseSpeed = 5000f;
+                cc.maxTorque = 80000f;
+            }
+
+            ExplosionVehicle ev = root.GetComponent<ExplosionVehicle>();
+            if (ev != null)
+            {
+                ev.health = 999999999;
+                ev.enabled = false;
+            }
+
+            CarImpactCheck cic = root.GetComponent<CarImpactCheck>();
+            if (cic != null)
+            {
+                cic.damage = false;
+            }
+
             // Rear jet exhaust particle
             Transform smoke = root.transform.Find("ExhustedSmoke (1)");
-            if (smoke != null) smoke.localPosition = new Vector3(0.0f, 1.00f, -5.70f);
+            if (smoke != null) smoke.localPosition = new Vector3(0.0f, 1.35f, -5.70f);
 
-            // Front bumper kill trigger on NPCs (reset localPosition to zero so it doesn't double-offset)
+            // Front bumper kill trigger on NPCs
             Transform triggerKill = root.transform.Find("TriggerKill");
             if (triggerKill != null)
             {
@@ -173,19 +192,14 @@ public class SetupBatmobileMod
                 BoxCollider tkCol = triggerKill.GetComponent<BoxCollider>();
                 if (tkCol != null)
                 {
-                    tkCol.center = new Vector3(0.0f, 0.80f, 5.50f);
-                    tkCol.size = new Vector3(3.20f, 0.80f, 0.60f);
+                    tkCol.center = new Vector3(0.0f, 1.00f, 5.50f);
+                    tkCol.size = new Vector3(3.00f, 0.80f, 0.60f);
                 }
             }
 
             // 6. Multiple Accurately Inset Hitboxes & Right-Side Sit Trigger
-            // CRITICAL: All solid hitboxes are strictly INSET inside the 3D visual mesh.
-            // There are NO invisible solid walls surrounding or protruding outside the car!
-            // - Mid body collider is width 3.00m (X = -1.50m to +1.50m) inside the 3.10m car body.
-            //   This allows the player to walk directly up to the car door without hitting any forcefield!
-            // - Front nose collider is width 3.40m, tightly inside the hood.
-            // - Rear chassis collider is width 4.20m, tightly inside the rear body.
-            // - All solid boxes bottom at Y = 0.65m (clears road & wheels so no getting stuck on brakes).
+            // Elevated body clearance (bottoms >= 1.00m) to glide smoothly over steeps and rough terrain.
+            // Rear collider tightly ends at Z = -4.70m to eliminate free space overhang behind vehicle.
             List<BoxCollider> solidCols = new List<BoxCollider>();
             BoxCollider triggerCol = null;
 
@@ -207,8 +221,8 @@ public class SetupBatmobileMod
                 triggerCol.isTrigger = true;
             }
 
-            triggerCol.center = new Vector3(2.20f, 0.80f, 0.30f);
-            triggerCol.size = new Vector3(2.60f, 1.80f, 3.00f);
+            triggerCol.center = new Vector3(2.20f, 1.00f, 0.30f);
+            triggerCol.size = new Vector3(2.60f, 2.00f, 3.00f);
 
             while (solidCols.Count < 3)
             {
@@ -217,17 +231,17 @@ public class SetupBatmobileMod
                 solidCols.Add(newSolid);
             }
 
-            // Collider 1: Front Nose & Hood (tightly inset inside front mesh, zero overhang)
-            solidCols[0].center = new Vector3(0.0f, 1.15f, 4.00f);
-            solidCols[0].size = new Vector3(3.40f, 1.00f, 3.00f);
+            // Collider 1: Front Nose & Hood (tightly inset inside front mesh, elevated for steeps)
+            solidCols[0].center = new Vector3(0.0f, 1.50f, 4.00f);
+            solidCols[0].size = new Vector3(3.40f, 1.00f, 2.80f);
 
-            // Collider 2: Mid Body & Cabin (width 3.00m strictly inside 3.10m doors, NO invisible side wall)
-            solidCols[1].center = new Vector3(0.0f, 1.45f, 0.70f);
-            solidCols[1].size = new Vector3(3.00f, 1.60f, 3.80f);
+            // Collider 2: Mid Body & Cabin (width 3.00m strictly inside 3.10m doors, NO invisible side barrier)
+            solidCols[1].center = new Vector3(0.0f, 1.80f, 0.70f);
+            solidCols[1].size = new Vector3(3.00f, 1.60f, 3.60f);
 
-            // Collider 3: Rear Body & Fins (width 4.20m inside rear body, NO invisible rear wall)
-            solidCols[2].center = new Vector3(0.0f, 1.55f, -3.20f);
-            solidCols[2].size = new Vector3(4.20f, 1.80f, 4.20f);
+            // Collider 3: Rear Body & Fins (tightly terminates at Z = -4.70m, NO free space overhang behind car)
+            solidCols[2].center = new Vector3(0.0f, 1.85f, -3.00f);
+            solidCols[2].size = new Vector3(3.60f, 1.50f, 3.40f);
 
             for (int i = 3; i < solidCols.Count; i++)
             {
@@ -263,11 +277,11 @@ public class SetupBatmobileMod
             if (wc != null)
             {
                 wc.radius = radius;
-                wc.suspensionDistance = 0.25f;
+                wc.suspensionDistance = 0.40f; // Long travel suspension for rough terrain and steep slopes
                 JointSpring js = wc.suspensionSpring;
-                js.spring = 45000f;
-                js.damper = 5500f;
-                js.targetPosition = 0.45f;
+                js.spring = 65000f; // Stiffer spring prevents bottoming out
+                js.damper = 7500f;
+                js.targetPosition = 0.30f;
                 wc.suspensionSpring = js;
             }
         }
@@ -298,6 +312,18 @@ public class SetupBatmobileMod
                         mr.enabled = true;
                         Material tireMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/Material/tier_1o.mat");
                         Material rimMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/Material/wheel_truck_stamp_spec.mat");
+                        if (tireMat != null)
+                        {
+                            tireMat.EnableKeyword("_EMISSION");
+                            tireMat.SetColor("_Color", new Color(0.8f, 0.05f, 0.05f, 1f));
+                            tireMat.SetColor("_EmissionColor", new Color(3.5f, 0.1f, 0.1f, 1f));
+                        }
+                        if (rimMat != null)
+                        {
+                            rimMat.EnableKeyword("_EMISSION");
+                            rimMat.SetColor("_Color", Color.white);
+                            rimMat.SetColor("_EmissionColor", new Color(3.5f, 3.5f, 3.5f, 1f));
+                        }
                         if (tireMat != null && rimMat != null)
                         {
                             mr.sharedMaterials = new Material[] { tireMat, rimMat };
