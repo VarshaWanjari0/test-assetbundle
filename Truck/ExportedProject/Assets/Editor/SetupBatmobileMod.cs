@@ -53,7 +53,7 @@ public class SetupBatmobileMod
                     Transform body = truck.Find("Cargodoor_left");
                     if (body != null)
                     {
-                        body.localPosition = new Vector3(0.0f, 0.35f, 0.0f); // Elevate body for rough terrain and steeps
+                        body.localPosition = new Vector3(0.0f, 0.18f, 0.0f); // Balanced elevation for rough terrain and realistic wheel fit
                         body.localRotation = Quaternion.identity;
                         body.localScale = Vector3.one;
 
@@ -146,10 +146,14 @@ public class SetupBatmobileMod
                 }
             }
 
-            // 5. Stable Right-Side Door Entry Area & Co-located DoorPos
-            Vector3 doorPosition = new Vector3(2.00f, 0.35f, 0.30f);
+            // 5. 2.5x-3x Large DoorPos & Right-Side Sit Area
+            Vector3 doorPosition = new Vector3(2.50f, 0.40f, 0.30f);
             Transform doorPos = root.transform.Find("DoorPos");
-            if (doorPos != null) doorPos.localPosition = doorPosition;
+            if (doorPos != null)
+            {
+                doorPos.localPosition = doorPosition;
+                doorPos.localScale = new Vector3(3.0f, 3.0f, 3.0f); // 3x scale as requested
+            }
 
             // Camera Look-at Pivot: Geometric center of vehicle (0, 1.80, 0)
             Transform cam = root.transform.Find("Cam");
@@ -192,14 +196,14 @@ public class SetupBatmobileMod
                 BoxCollider tkCol = triggerKill.GetComponent<BoxCollider>();
                 if (tkCol != null)
                 {
-                    tkCol.center = new Vector3(0.0f, 1.00f, 5.50f);
+                    tkCol.center = new Vector3(0.0f, 0.80f, 5.50f);
                     tkCol.size = new Vector3(3.00f, 0.80f, 0.60f);
                 }
             }
 
-            // 6. Multiple Accurately Inset Hitboxes & Right-Side Sit Trigger
-            // Elevated body clearance (bottoms >= 1.00m) to glide smoothly over steeps and rough terrain.
-            // Rear collider tightly ends at Z = -4.70m to eliminate free space overhang behind vehicle.
+            // 6. Solid Hitboxes Reaching Ground Level & 2.5x-3x Large Sit Trigger
+            // Full height from Y = 0.40m up to 2.45m so player NEVER walks under or falls on touching the car!
+            // Rear collider tightly ends at Z = -4.90m so NO free space ghost hitbox behind the car.
             List<BoxCollider> solidCols = new List<BoxCollider>();
             BoxCollider triggerCol = null;
 
@@ -221,8 +225,9 @@ public class SetupBatmobileMod
                 triggerCol.isTrigger = true;
             }
 
-            triggerCol.center = new Vector3(2.20f, 1.00f, 0.30f);
-            triggerCol.size = new Vector3(2.60f, 2.00f, 3.00f);
+            // Generous 2.5x-3x sit trigger covering the entire right side of the car
+            triggerCol.center = new Vector3(2.50f, 0.80f, 0.30f);
+            triggerCol.size = new Vector3(4.20f, 2.20f, 6.00f);
 
             while (solidCols.Count < 3)
             {
@@ -231,17 +236,17 @@ public class SetupBatmobileMod
                 solidCols.Add(newSolid);
             }
 
-            // Collider 1: Front Nose & Hood (tightly inset inside front mesh, elevated for steeps)
-            solidCols[0].center = new Vector3(0.0f, 1.50f, 4.00f);
-            solidCols[0].size = new Vector3(3.40f, 1.00f, 2.80f);
+            // Collider 1: Front Nose & Hood (height 1.80m, bottom at 0.40m, player never falls)
+            solidCols[0].center = new Vector3(0.0f, 1.30f, 3.80f);
+            solidCols[0].size = new Vector3(3.60f, 1.80f, 3.20f);
 
-            // Collider 2: Mid Body & Cabin (width 3.00m strictly inside 3.10m doors, NO invisible side barrier)
-            solidCols[1].center = new Vector3(0.0f, 1.80f, 0.70f);
-            solidCols[1].size = new Vector3(3.00f, 1.60f, 3.60f);
+            // Collider 2: Mid Body & Cabin (height 2.00m, bottom at 0.40m, width 3.30m solid protection)
+            solidCols[1].center = new Vector3(0.0f, 1.40f, 0.50f);
+            solidCols[1].size = new Vector3(3.30f, 2.00f, 3.80f);
 
-            // Collider 3: Rear Body & Fins (tightly terminates at Z = -4.70m, NO free space overhang behind car)
-            solidCols[2].center = new Vector3(0.0f, 1.85f, -3.00f);
-            solidCols[2].size = new Vector3(3.60f, 1.50f, 3.40f);
+            // Collider 3: Rear Body & Fins (height 2.00m, bottom at 0.45m, ends at Z = -4.90m, zero overhang)
+            solidCols[2].center = new Vector3(0.0f, 1.45f, -3.10f);
+            solidCols[2].size = new Vector3(3.80f, 2.00f, 3.60f);
 
             for (int i = 3; i < solidCols.Count; i++)
             {
@@ -314,15 +319,19 @@ public class SetupBatmobileMod
                         Material rimMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/Material/wheel_truck_stamp_spec.mat");
                         if (tireMat != null)
                         {
-                            tireMat.EnableKeyword("_EMISSION");
-                            tireMat.SetColor("_Color", new Color(0.8f, 0.05f, 0.05f, 1f));
-                            tireMat.SetColor("_EmissionColor", new Color(3.5f, 0.1f, 0.1f, 1f));
+                            tireMat.DisableKeyword("_EMISSION");
+                            tireMat.SetColor("_Color", new Color(0.12f, 0.12f, 0.12f, 1f));
+                            tireMat.SetColor("_EmissionColor", Color.black);
+                            tireMat.SetFloat("_Metallic", 0.05f);
+                            tireMat.SetFloat("_Glossiness", 0.25f);
                         }
                         if (rimMat != null)
                         {
-                            rimMat.EnableKeyword("_EMISSION");
-                            rimMat.SetColor("_Color", Color.white);
-                            rimMat.SetColor("_EmissionColor", new Color(3.5f, 3.5f, 3.5f, 1f));
+                            rimMat.DisableKeyword("_EMISSION");
+                            rimMat.SetColor("_Color", new Color(0.92f, 0.92f, 0.94f, 1f));
+                            rimMat.SetColor("_EmissionColor", Color.black);
+                            rimMat.SetFloat("_Metallic", 0.92f);
+                            rimMat.SetFloat("_Glossiness", 0.85f);
                         }
                         if (tireMat != null && rimMat != null)
                         {
