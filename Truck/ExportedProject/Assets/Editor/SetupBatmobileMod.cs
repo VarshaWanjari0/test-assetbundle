@@ -33,7 +33,7 @@ public class SetupBatmobileMod
         GameObject root = PrefabUtility.LoadPrefabContents(prefabPath);
         try
         {
-            Debug.Log("[SetupBatmobileMod] Configuring Batmobile: full-width overlapping hitboxes (no falling on touch) and 2.5x larger sit button...");
+            Debug.Log("[SetupBatmobileMod] Configuring Batmobile based on Truck.glb inspection: single unified solid body, freeze door rigidbodies, disable TriggerKill, 2.5x larger sit button...");
 
             // 1. Swap Truck Body Mesh on carzyCar/truck/Cargodoor_left
             Transform carzyCar = root.transform.Find("carzyCar");
@@ -79,7 +79,7 @@ public class SetupBatmobileMod
                 }
             }
 
-            // 2. Setup 4 Wheels for 75% size (radius = 0.66m) with high brake friction
+            // 2. Setup 4 Wheels for 75% size (radius = 0.66m) matching Truck.glb physics
             float wheelRadius = 0.66f;
             Vector3 posFL = new Vector3(-2.00f, 0.74f,  3.58f);
             Vector3 posFR = new Vector3( 2.00f, 0.74f,  3.58f);
@@ -102,28 +102,36 @@ public class SetupBatmobileMod
                 steerDummy.localScale = Vector3.zero;
             }
 
-            // Disable truck doors and their colliders completely so no invisible barriers exist
+            // 4. CRITICAL FIX: Freeze Truck Door Rigidbodies completely!
+            // In Truck.glb, DoorFL and DoorFR have 250kg dynamic rigidbodies.
+            // Disabling their colliders without freezing them allowed them to swing/drop under gravity and strike the player!
             Transform doors = root.transform.Find("Doors");
             if (doors != null)
             {
-                foreach (var mr in doors.GetComponentsInChildren<MeshRenderer>(true))
+                foreach (var rb in doors.GetComponentsInChildren<Rigidbody>(true))
+                {
+                    rb.isKinematic = true;
+                    rb.useGravity = false;
+                    rb.detectCollisions = false;
+                    rb.mass = 0.001f;
+                }
+                foreach (var col in doors.GetComponentsInChildren<Collider>(true))
+                {
+                    col.enabled = false;
+                }
+                foreach (var mr in doors.GetComponentsInChildren<Renderer>(true))
                 {
                     mr.enabled = false;
                 }
-                foreach (var col in doors.GetComponentsInChildren<BoxCollider>(true))
-                {
-                    col.size = Vector3.zero;
-                    col.enabled = false;
-                }
             }
 
-            // 4. Cockpit Seating: Sunk down by 1.10m so the head is 100% inside the car
+            // 5. Cockpit Seating: Tucked inside car with head safe
             Vector3 cockpitSitPos = new Vector3(0.0f, -0.65f, -1.80f);
             Transform sitPos = root.transform.Find("SitPosL");
             if (sitPos != null)
             {
                 sitPos.localPosition = cockpitSitPos;
-                sitPos.localScale = new Vector3(0.85f, 0.85f, 0.85f); // Compact sitting posture to keep head tucked inside
+                sitPos.localScale = new Vector3(0.85f, 0.85f, 0.85f);
             }
 
             Transform leftFoot = root.transform.Find("LeftFoot");
@@ -145,13 +153,13 @@ public class SetupBatmobileMod
                 BoxCollider ppCol = playerProtect.GetComponent<BoxCollider>();
                 if (ppCol != null)
                 {
-                    ppCol.enabled = false; // Disabled so no physics clipping or character tripping
+                    ppCol.enabled = false;
                 }
             }
 
-            // 5. Stable Right-Side Door Entry Area & Co-located DoorPos
-            // Placing DoorPos at (2.45, 0.40, 0.30) right outside the 2.20m car body
-            Vector3 doorPosition = new Vector3(2.45f, 0.40f, 0.30f);
+            // 6. Door Position & 2.5x Larger Sit Trigger
+            // Placing DoorPos at (2.80, 0.40, 0.30) right beside the 2.40m car body
+            Vector3 doorPosition = new Vector3(2.80f, 0.40f, 0.30f);
             Transform doorPos = root.transform.Find("DoorPos");
             if (doorPos != null)
             {
@@ -159,27 +167,28 @@ public class SetupBatmobileMod
                 doorPos.localScale = Vector3.one;
             }
 
-            // Camera Look-at Pivot: Geometric center of vehicle (0, 1.60, 0)
+            // Camera Look-at Pivot
             Transform cam = root.transform.Find("Cam");
             if (cam != null) cam.localPosition = new Vector3(0.0f, 1.60f, 0.0f);
 
             RidingCar rc = root.GetComponent<RidingCar>();
             if (rc != null) rc.CamDis = 14;
 
-            // 5b. Indestructibility, 75% Acceleration (60,000 Torque), and Powerful Braking Drag
+            // 7. Indestructibility, 75% Acceleration (60,000 Torque), and Powerful Braking
             CarControl cc = root.GetComponent<CarControl>();
             if (cc != null)
             {
                 cc.topSpeed = 5000f;
                 cc.reverseSpeed = 5000f;
-                cc.maxTorque = 60000f; // 75% of previous 80,000 torque as requested
+                cc.maxTorque = 60000f; // 75% acceleration
             }
 
-            Rigidbody rb = root.GetComponent<Rigidbody>();
-            if (rb != null)
+            Rigidbody carRb = root.GetComponent<Rigidbody>();
+            if (carRb != null)
             {
-                rb.drag = 0.35f; // Balanced deceleration drag so brakes can rein in 5000 speed
-                rb.angularDrag = 2.0f;
+                carRb.mass = 4000f;
+                carRb.drag = 0.25f; // Controlled drag to aid powerful braking
+                carRb.angularDrag = 1.5f;
             }
 
             ExplosionVehicle ev = root.GetComponent<ExplosionVehicle>();
@@ -193,32 +202,29 @@ public class SetupBatmobileMod
             if (cic != null)
             {
                 cic.damage = false;
-                cic.enabled = false; // Disable collision knockback routine on player
+                cic.enabled = false;
             }
 
             // Rear jet exhaust particle
             Transform smoke = root.transform.Find("ExhustedSmoke (1)");
             if (smoke != null) smoke.localPosition = new Vector3(0.0f, 1.00f, -5.70f);
 
-            // Front bumper kill trigger on NPCs
+            // 8. Disable TriggerKill completely so it can NEVER knock down the player on touch!
             Transform triggerKill = root.transform.Find("TriggerKill");
             if (triggerKill != null)
             {
-                triggerKill.localPosition = Vector3.zero;
                 BoxCollider tkCol = triggerKill.GetComponent<BoxCollider>();
                 if (tkCol != null)
                 {
-                    tkCol.center = new Vector3(0.0f, 0.80f, 5.60f);
-                    tkCol.size = new Vector3(2.80f, 0.60f, 0.40f);
+                    tkCol.size = Vector3.zero;
+                    tkCol.enabled = false;
                 }
+                triggerKill.gameObject.SetActive(false);
             }
 
-            // 6. Full-Width Overlapping Solid Hitboxes & 2.5x Larger Sit Trigger
-            // CRITICAL FIX FOR FALLING ON TOUCH:
-            // Colliders now match the real exterior width of the car (4.40m front/mid, 4.80m rear)
-            // and reach solidly down to Y = 0.45m.
-            // This shields the WheelColliders and inner mesh completely so the player contacts a solid wall
-            // and can NEVER penetrate inside, touch spinning wheel colliders, or trip/fall!
+            // 9. Single Unified Solid Box Collider (Exactly Like Original Truck.glb!)
+            // Truck.glb had ONE single 12.9m long box collider covering the entire body!
+            // No stepped gaps, no seams where character controller can trip!
             List<BoxCollider> solidCols = new List<BoxCollider>();
             BoxCollider triggerCol = null;
 
@@ -240,35 +246,31 @@ public class SetupBatmobileMod
                 triggerCol.isTrigger = true;
             }
 
-            // 2.5x Larger Sit Trigger across the entire right side of the car
-            triggerCol.center = new Vector3(3.00f, 1.20f, 0.30f);
-            triggerCol.size = new Vector3(4.50f, 2.50f, 6.00f);
+            // 2.5x Larger Sit Trigger covering the entire right side of the car
+            triggerCol.center = new Vector3(3.20f, 1.20f, 0.30f);
+            triggerCol.size = new Vector3(4.50f, 2.80f, 6.00f);
 
-            while (solidCols.Count < 3)
+            while (solidCols.Count < 1)
             {
                 BoxCollider newSolid = root.AddComponent<BoxCollider>();
                 newSolid.isTrigger = false;
                 solidCols.Add(newSolid);
             }
 
-            // Collider 1: Front Nose & Hood (width 4.40m covers front fenders/wheels, height 1.80m down to 0.45m, length 3.20m: Z 2.40 to 5.60)
-            solidCols[0].center = new Vector3(0.0f, 1.35f, 4.00f);
-            solidCols[0].size = new Vector3(4.40f, 1.80f, 3.20f);
+            // Main Unified Solid Body: Width 4.80m (shields all 4 wheels), Height 1.80m (Y 0.45 to 2.25m), Length 11.40m
+            solidCols[0].center = new Vector3(0.0f, 1.35f, 0.35f);
+            solidCols[0].size = new Vector3(4.80f, 1.80f, 11.40f);
+            solidCols[0].enabled = true;
+            solidCols[0].isTrigger = false;
 
-            // Collider 2: Mid Body & Cabin (width 4.40m covers doors/intakes, height 1.80m down to 0.45m, length 4.20m: Z -1.40 to 2.80 -> overlaps front by 0.40m!)
-            solidCols[1].center = new Vector3(0.0f, 1.35f, 0.70f);
-            solidCols[1].size = new Vector3(4.40f, 1.80f, 4.20f);
-
-            // Collider 3: Rear Body & Fins (width 4.80m covers rear fenders/wheels, height 1.80m down to 0.45m, length 3.80m: Z -4.95 to -1.15 -> overlaps mid by 0.25m!)
-            solidCols[2].center = new Vector3(0.0f, 1.35f, -3.05f);
-            solidCols[2].size = new Vector3(4.80f, 1.80f, 3.80f);
-
-            for (int i = 3; i < solidCols.Count; i++)
+            // Disable any extra colliders on root to maintain clean single-collider architecture like Truck.glb
+            for (int i = 1; i < solidCols.Count; i++)
             {
                 solidCols[i].size = Vector3.zero;
+                solidCols[i].enabled = false;
             }
 
-            // 7. Tag all assets into AssetBundle 'rgs'
+            // 10. Tag all assets into AssetBundle 'rgs'
             string[] allFiles = Directory.GetFiles("Assets", "*.*", SearchOption.AllDirectories);
             foreach (string file in allFiles)
             {
@@ -279,7 +281,7 @@ public class SetupBatmobileMod
             }
 
             PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
-            Debug.Log("[SetupBatmobileMod] 🎉 Successfully configured Batmobile with full-width hitboxes and 2.5x larger sit button!");
+            Debug.Log("[SetupBatmobileMod] 🎉 Successfully configured Batmobile matching Truck.glb architecture!");
         }
         finally
         {
@@ -299,19 +301,19 @@ public class SetupBatmobileMod
                 wc.radius = radius;
                 wc.suspensionDistance = 0.30f;
                 JointSpring js = wc.suspensionSpring;
-                js.spring = 55000f;
-                js.damper = 6500f;
-                js.targetPosition = 0.40f;
+                js.spring = 45000f;
+                js.damper = 5500f;
+                js.targetPosition = 0.45f;
                 wc.suspensionSpring = js;
 
-                // Powerful braking grip and damping
-                wc.wheelDampingRate = 1.0f;
+                // High traction friction curves for powerful braking and grip
+                wc.wheelDampingRate = 0.5f;
                 WheelFrictionCurve ff = wc.forwardFriction;
-                ff.stiffness = 2.5f; // High traction bite for strong braking
+                ff.stiffness = 2.0f;
                 wc.forwardFriction = ff;
 
                 WheelFrictionCurve sf = wc.sidewaysFriction;
-                sf.stiffness = 2.0f; // Firm lateral control
+                sf.stiffness = 1.5f;
                 wc.sidewaysFriction = sf;
             }
         }
