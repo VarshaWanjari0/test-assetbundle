@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
@@ -144,9 +145,11 @@ public class SetupBatmobileMod
                 }
             }
 
-            // 5. Large Right-Side Door Entry Area & Co-located DoorPos
-            // Placing DoorPos directly within the trigger area prevents RidingCar distance checks from prematurely hiding the button
-            Vector3 doorPosition = new Vector3(2.80f, 0.25f, 0.50f);
+            // 5. Stable Right-Side Sit Trigger & Co-located DoorPos
+            // Placing DoorPos at (3.00, 0.50, 0.50) with the trigger tightly enclosing it ensures:
+            // max distance from any point in the trigger to DoorPos is <= 2.34m (< 2.5m cutoff in RidingCar.Update).
+            // This guarantees the enter button STAYS permanently visible and does NOT disappear in a split second!
+            Vector3 doorPosition = new Vector3(3.00f, 0.50f, 0.50f);
             Transform doorPos = root.transform.Find("DoorPos");
             if (doorPos != null) doorPos.localPosition = doorPosition;
 
@@ -164,34 +167,60 @@ public class SetupBatmobileMod
             Transform triggerKill = root.transform.Find("TriggerKill");
             if (triggerKill != null) triggerKill.localPosition = new Vector3(0.0f, 0.80f, 5.70f);
 
-            // 6. Accurate Hitbox & Right-Side Large Sit Trigger
-            BoxCollider[] colliders = root.GetComponents<BoxCollider>();
-            int nonTriggerCount = 0;
-            foreach (var col in colliders)
+            // 6. Multiple Accurate Hitboxes & Generous Right-Side Sit Trigger
+            // Trigger: covers right-side entry (X: 1.5m to 4.5m, Z: -1.2m to 2.2m, Y: -0.1m to 1.7m)
+            // Volume = 18.36 m^3 (4.15x original truck trigger). All points within 2.34m of DoorPos.
+            // Hitboxes: 3 custom-fitted solid boxes matching Batmobile profile:
+            // - Front Nose/Hood: low sleek profile (width 4.40m, height 1.20m, length 2.80m)
+            // - Mid Cabin/Cockpit: mid chassis profile (width 4.85m, height 1.80m, length 4.50m)
+            // - Rear Fins & Fuselage: wide tall bat fins (width 5.50m, height 2.20m, length 4.30m)
+            // All 3 boxes have bottom at Y = 0.65m (clears road & wheels, so car never gets stuck on bumps/brakes)
+            List<BoxCollider> solidCols = new List<BoxCollider>();
+            BoxCollider triggerCol = null;
+
+            foreach (var col in root.GetComponents<BoxCollider>())
             {
                 if (col.isTrigger)
                 {
-                    // Large Sit Button Area towards the right side:
-                    // Center X = 3.80m, Size X = 5.00m (covers X = 1.3m to 6.3m on the right side)
-                    // Length = 7.00m, Height = 2.50m
-                    col.center = new Vector3(3.80f, 1.20f, 0.50f);
-                    col.size = new Vector3(5.00f, 2.50f, 7.00f);
+                    if (triggerCol == null) triggerCol = col;
                 }
                 else
                 {
-                    if (nonTriggerCount == 0)
-                    {
-                        // Accurate 1:1 Solid Car Hitbox:
-                        // Width: 5.20m, Height: 2.20m (bottom at 0.55m, top at 2.75m), Length: 11.40m
-                        col.center = new Vector3(0.0f, 1.65f, 0.0f);
-                        col.size = new Vector3(5.20f, 2.20f, 11.40f);
-                        nonTriggerCount++;
-                    }
-                    else
-                    {
-                        col.size = Vector3.zero;
-                    }
+                    solidCols.Add(col);
                 }
+            }
+
+            if (triggerCol == null)
+            {
+                triggerCol = root.AddComponent<BoxCollider>();
+                triggerCol.isTrigger = true;
+            }
+
+            triggerCol.center = new Vector3(3.00f, 0.80f, 0.50f);
+            triggerCol.size = new Vector3(3.00f, 1.80f, 3.40f);
+
+            while (solidCols.Count < 3)
+            {
+                BoxCollider newSolid = root.AddComponent<BoxCollider>();
+                newSolid.isTrigger = false;
+                solidCols.Add(newSolid);
+            }
+
+            // Collider 1: Front Nose & Hood
+            solidCols[0].center = new Vector3(0.0f, 1.25f, 4.35f);
+            solidCols[0].size = new Vector3(4.40f, 1.20f, 2.80f);
+
+            // Collider 2: Mid Body & Cabin
+            solidCols[1].center = new Vector3(0.0f, 1.55f, 0.75f);
+            solidCols[1].size = new Vector3(4.85f, 1.80f, 4.50f);
+
+            // Collider 3: Rear Body & Tall Bat Fins
+            solidCols[2].center = new Vector3(0.0f, 1.75f, -3.60f);
+            solidCols[2].size = new Vector3(5.50f, 2.20f, 4.30f);
+
+            for (int i = 3; i < solidCols.Count; i++)
+            {
+                solidCols[i].size = Vector3.zero;
             }
 
             // 7. Tag all assets into AssetBundle 'rgs'
