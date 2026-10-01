@@ -33,7 +33,7 @@ public class SetupBatmobileMod
         GameObject root = PrefabUtility.LoadPrefabContents(prefabPath);
         try
         {
-            Debug.Log("[SetupBatmobileMod] Configuring Batmobile v2: overlapping hitboxes, lowered cockpit seating, 75% accel, and powerful braking...");
+            Debug.Log("[SetupBatmobileMod] Configuring Batmobile: full-width overlapping hitboxes (no falling on touch) and 2.5x larger sit button...");
 
             // 1. Swap Truck Body Mesh on carzyCar/truck/Cargodoor_left
             Transform carzyCar = root.transform.Find("carzyCar");
@@ -149,8 +149,9 @@ public class SetupBatmobileMod
                 }
             }
 
-            // 5. Stable Right-Side Door Entry Area & Co-located DoorPos (From Working Baseline)
-            Vector3 doorPosition = new Vector3(2.00f, 0.25f, 0.30f);
+            // 5. Stable Right-Side Door Entry Area & Co-located DoorPos
+            // Placing DoorPos at (2.45, 0.40, 0.30) right outside the 2.20m car body
+            Vector3 doorPosition = new Vector3(2.45f, 0.40f, 0.30f);
             Transform doorPos = root.transform.Find("DoorPos");
             if (doorPos != null)
             {
@@ -192,6 +193,7 @@ public class SetupBatmobileMod
             if (cic != null)
             {
                 cic.damage = false;
+                cic.enabled = false; // Disable collision knockback routine on player
             }
 
             // Rear jet exhaust particle
@@ -206,15 +208,17 @@ public class SetupBatmobileMod
                 BoxCollider tkCol = triggerKill.GetComponent<BoxCollider>();
                 if (tkCol != null)
                 {
-                    tkCol.center = new Vector3(0.0f, 0.80f, 5.50f);
-                    tkCol.size = new Vector3(3.00f, 0.80f, 0.60f);
+                    tkCol.center = new Vector3(0.0f, 0.80f, 5.60f);
+                    tkCol.size = new Vector3(2.80f, 0.60f, 0.40f);
                 }
             }
 
-            // 6. Overlapping Solid Hitboxes with ~10% More Thickness & Ground Coverage
-            // Eliminates gap where character feet walked under car causing falling!
-            // - Solid colliders overlap along Z so there are no seams.
-            // - Bottom extends down to Y = 0.45m across entire car.
+            // 6. Full-Width Overlapping Solid Hitboxes & 2.5x Larger Sit Trigger
+            // CRITICAL FIX FOR FALLING ON TOUCH:
+            // Colliders now match the real exterior width of the car (4.40m front/mid, 4.80m rear)
+            // and reach solidly down to Y = 0.45m.
+            // This shields the WheelColliders and inner mesh completely so the player contacts a solid wall
+            // and can NEVER penetrate inside, touch spinning wheel colliders, or trip/fall!
             List<BoxCollider> solidCols = new List<BoxCollider>();
             BoxCollider triggerCol = null;
 
@@ -236,9 +240,9 @@ public class SetupBatmobileMod
                 triggerCol.isTrigger = true;
             }
 
-            // Stable Right-Side Door Trigger
-            triggerCol.center = new Vector3(2.20f, 0.80f, 0.30f);
-            triggerCol.size = new Vector3(2.60f, 1.80f, 3.00f);
+            // 2.5x Larger Sit Trigger across the entire right side of the car
+            triggerCol.center = new Vector3(3.00f, 1.20f, 0.30f);
+            triggerCol.size = new Vector3(4.50f, 2.50f, 6.00f);
 
             while (solidCols.Count < 3)
             {
@@ -247,17 +251,17 @@ public class SetupBatmobileMod
                 solidCols.Add(newSolid);
             }
 
-            // Collider 1: Front Nose & Hood (height 1.20m, bottom at 0.45m, length 3.20m: Z 2.40 to 5.60)
-            solidCols[0].center = new Vector3(0.0f, 1.05f, 4.00f);
-            solidCols[0].size = new Vector3(3.50f, 1.20f, 3.20f);
+            // Collider 1: Front Nose & Hood (width 4.40m covers front fenders/wheels, height 1.80m down to 0.45m, length 3.20m: Z 2.40 to 5.60)
+            solidCols[0].center = new Vector3(0.0f, 1.35f, 4.00f);
+            solidCols[0].size = new Vector3(4.40f, 1.80f, 3.20f);
 
-            // Collider 2: Mid Body & Cabin (height 1.80m, bottom at 0.45m, length 4.10m: Z -1.35 to 2.75 -> overlaps front by 0.35m!)
+            // Collider 2: Mid Body & Cabin (width 4.40m covers doors/intakes, height 1.80m down to 0.45m, length 4.20m: Z -1.40 to 2.80 -> overlaps front by 0.40m!)
             solidCols[1].center = new Vector3(0.0f, 1.35f, 0.70f);
-            solidCols[1].size = new Vector3(3.15f, 1.80f, 4.10f);
+            solidCols[1].size = new Vector3(4.40f, 1.80f, 4.20f);
 
-            // Collider 3: Rear Body & Fins (height 1.80m, bottom at 0.45m, length 3.80m: Z -4.95 to -1.15 -> overlaps mid by 0.20m, ends at Z -4.95m!)
+            // Collider 3: Rear Body & Fins (width 4.80m covers rear fenders/wheels, height 1.80m down to 0.45m, length 3.80m: Z -4.95 to -1.15 -> overlaps mid by 0.25m!)
             solidCols[2].center = new Vector3(0.0f, 1.35f, -3.05f);
-            solidCols[2].size = new Vector3(3.90f, 1.80f, 3.80f);
+            solidCols[2].size = new Vector3(4.80f, 1.80f, 3.80f);
 
             for (int i = 3; i < solidCols.Count; i++)
             {
@@ -275,7 +279,7 @@ public class SetupBatmobileMod
             }
 
             PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
-            Debug.Log("[SetupBatmobileMod] 🎉 Successfully configured Batmobile v2!");
+            Debug.Log("[SetupBatmobileMod] 🎉 Successfully configured Batmobile with full-width hitboxes and 2.5x larger sit button!");
         }
         finally
         {
