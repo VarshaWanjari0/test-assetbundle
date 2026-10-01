@@ -32,7 +32,7 @@ public class SetupBatmobileMod
         GameObject root = PrefabUtility.LoadPrefabContents(prefabPath);
         try
         {
-            Debug.Log("[SetupBatmobileMod] Configuring 1.25X Batmobile with elevated clearance and high metallic finish...");
+            Debug.Log("[SetupBatmobileMod] Fine-tuning 1.25X Batmobile hitbox and expanding sit trigger 2.5X...");
 
             // 1. Swap Truck Body Mesh on carzyCar/truck/Cargodoor_left
             Transform carzyCar = root.transform.Find("carzyCar");
@@ -88,7 +88,7 @@ public class SetupBatmobileMod
             SetupWheel(root, "Wheel collider/Col FL", "Wheel Model/FL", "wheel_FL", posFL, wheelRadius, "Assets/Models/wheel_FL.obj");
             SetupWheel(root, "Wheel collider/Col FR", "Wheel Model/FR", "wheel_FL", posFR, wheelRadius, "Assets/Models/wheel_FR.obj");
             SetupWheel(root, "Wheel collider/Col RL", "Wheel Model/RL", "wheel_RL", posRL, wheelRadius, "Assets/Models/wheel_RL.obj");
-            SetupWheel(root, "Wheel collider/Col RR", "Wheel Model/RR", "wheel_RL", posRR, wheelRadius, "Assets/Models/wheel_RR.obj");
+            SetupWheel(root, "Wheel collider/Col RR", "Wheel Model/RR", "wheel_RL", posRR, wheelRadius, "Assets/Models/wheel_RL.obj");
 
             // 3. Remove steering wheel model
             Transform steerDummy = root.transform.Find("steering_dummy");
@@ -162,24 +162,33 @@ public class SetupBatmobileMod
             Transform triggerKill = root.transform.Find("TriggerKill");
             if (triggerKill != null) triggerKill.localPosition = new Vector3(0.0f, 1.00f, 7.60f);
 
-            // 6. Hitbox (Elevated solid BoxCollider + Door Entry Trigger)
+            // 6. Hitbox: Fine-tuned two-stage vehicle colliders + 2.5X expanded Sit Trigger
             BoxCollider[] colliders = root.GetComponents<BoxCollider>();
             int nonTriggerCount = 0;
             foreach (var col in colliders)
             {
                 if (col.isTrigger)
                 {
-                    // Door Entry Trigger
-                    col.center = new Vector3(3.60f, 1.20f, 0.00f);
-                    col.size = new Vector3(2.50f, 2.00f, 4.00f);
+                    // 2.5X Large Sit Button Area: covers right flank and midsection generously
+                    col.center = new Vector3(2.50f, 2.00f, 0.00f);
+                    col.size = new Vector3(9.00f, 4.50f, 11.00f);
                 }
                 else
                 {
                     if (nonTriggerCount == 0)
                     {
-                        // 1.25X Batmobile Solid Hitbox: 6.5m wide, 2.8m high, 15.0m long
-                        col.center = new Vector3(0.0f, 2.20f, 0.0f);
-                        col.size = new Vector3(6.50f, 2.80f, 15.00f);
+                        // Stage 1: Lower Chassis Collider (low sleek profile matching hood & flanks)
+                        // Height 1.8m: bottom at 0.8m (above wheels), top at 2.6m
+                        col.center = new Vector3(0.0f, 1.70f, 0.0f);
+                        col.size = new Vector3(6.80f, 1.80f, 15.20f);
+                        nonTriggerCount++;
+                    }
+                    else if (nonTriggerCount == 1)
+                    {
+                        // Stage 2: Rear Cockpit & Bat Fin Collider (matches taller cockpit and 7.4m wide fins)
+                        // Height 2.2m: bottom at 1.7m, top at 3.9m (exact fin peak)
+                        col.center = new Vector3(0.0f, 2.80f, -3.50f);
+                        col.size = new Vector3(7.40f, 2.20f, 8.00f);
                         nonTriggerCount++;
                     }
                     else
@@ -200,7 +209,7 @@ public class SetupBatmobileMod
             }
 
             PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
-            Debug.Log("[SetupBatmobileMod] 🎉 Successfully configured 1.25X Batmobile with 0.8 metallic paint, anti-bottoming suspension, and center camera!");
+            Debug.Log("[SetupBatmobileMod] 🎉 Successfully configured fine-tuned hitbox and 2.5X sit trigger area!");
         }
         finally
         {
