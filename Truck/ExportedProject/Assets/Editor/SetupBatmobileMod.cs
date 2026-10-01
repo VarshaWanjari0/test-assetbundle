@@ -32,7 +32,7 @@ public class SetupBatmobileMod
         GameObject root = PrefabUtility.LoadPrefabContents(prefabPath);
         try
         {
-            Debug.Log("[SetupBatmobileMod] Fine-tuning 1.25X Batmobile hitbox and expanding sit trigger 2.5X...");
+            Debug.Log("[SetupBatmobileMod] Configuring Batmobile at 75% size with accurate hitbox and right-side sit area...");
 
             // 1. Swap Truck Body Mesh on carzyCar/truck/Cargodoor_left
             Transform carzyCar = root.transform.Find("carzyCar");
@@ -72,18 +72,18 @@ public class SetupBatmobileMod
                                     mr.sharedMaterials = new Material[] { batMat };
                                 }
                             }
-                            Debug.Log("[SetupBatmobileMod] High-metallic Batmobile body assigned!");
+                            Debug.Log("[SetupBatmobileMod] Batmobile body assigned successfully!");
                         }
                     }
                 }
             }
 
-            // 2. Setup 4 Wheels for 1.25X scale with radius = 0.89m and reinforced suspension
-            float wheelRadius = 0.89f;
-            Vector3 posFL = new Vector3(-2.66f, 0.98f,  4.78f);
-            Vector3 posFR = new Vector3( 2.66f, 0.98f,  4.78f);
-            Vector3 posRL = new Vector3(-3.18f, 0.98f, -3.95f);
-            Vector3 posRR = new Vector3( 3.18f, 0.98f, -3.95f);
+            // 2. Setup 4 Wheels for 75% size (radius = 0.66m)
+            float wheelRadius = 0.66f;
+            Vector3 posFL = new Vector3(-2.00f, 0.74f,  3.58f);
+            Vector3 posFR = new Vector3( 2.00f, 0.74f,  3.58f);
+            Vector3 posRL = new Vector3(-2.38f, 0.74f, -2.96f);
+            Vector3 posRR = new Vector3( 2.38f, 0.74f, -2.96f);
 
             SetupWheel(root, "Wheel collider/Col FL", "Wheel Model/FL", "wheel_FL", posFL, wheelRadius, "Assets/Models/wheel_FL.obj");
             SetupWheel(root, "Wheel collider/Col FR", "Wheel Model/FR", "wheel_FL", posFR, wheelRadius, "Assets/Models/wheel_FR.obj");
@@ -116,7 +116,7 @@ public class SetupBatmobileMod
             }
 
             // 4. Invisible rear cockpit seating
-            Vector3 invisibleSitPos = new Vector3(0.0f, 1.40f, -2.20f);
+            Vector3 invisibleSitPos = new Vector3(0.0f, 1.10f, -1.80f);
             Transform sitPos = root.transform.Find("SitPosL");
             if (sitPos != null) sitPos.localPosition = invisibleSitPos;
 
@@ -130,7 +130,7 @@ public class SetupBatmobileMod
             if (interior != null) interior.localPosition = invisibleSitPos;
 
             Transform interiorCam = root.transform.Find("Interior/InteriorCam");
-            if (interiorCam != null) interiorCam.localPosition = new Vector3(0.0f, 0.35f, 0.15f);
+            if (interiorCam != null) interiorCam.localPosition = new Vector3(0.0f, 0.30f, 0.10f);
 
             Transform playerProtect = root.transform.Find("Player Protect");
             if (playerProtect != null)
@@ -140,55 +140,51 @@ public class SetupBatmobileMod
                 if (ppCol != null)
                 {
                     ppCol.center = Vector3.zero;
-                    ppCol.size = new Vector3(2.00f, 1.80f, 2.00f);
+                    ppCol.size = new Vector3(1.80f, 1.50f, 1.80f);
                 }
             }
 
-            // Door approach position on the right flank
+            // 5. Large Right-Side Door Entry Area & Co-located DoorPos
+            // Placing DoorPos directly within the trigger area prevents RidingCar distance checks from prematurely hiding the button
+            Vector3 doorPosition = new Vector3(2.80f, 0.25f, 0.50f);
             Transform doorPos = root.transform.Find("DoorPos");
-            if (doorPos != null) doorPos.localPosition = new Vector3(3.60f, 0.30f, 0.00f);
+            if (doorPos != null) doorPos.localPosition = doorPosition;
 
-            // 5. Camera Look-at Pivot: Geometric center of vehicle (0, 2.0, 0)
+            // Camera Look-at Pivot: Geometric center of vehicle (0, 1.60, 0)
             Transform cam = root.transform.Find("Cam");
-            if (cam != null) cam.localPosition = new Vector3(0.0f, 2.00f, 0.00f);
+            if (cam != null) cam.localPosition = new Vector3(0.0f, 1.60f, 0.0f);
 
             RidingCar rc = root.GetComponent<RidingCar>();
-            if (rc != null) rc.CamDis = 17; // Properly framed for 15.2m car
+            if (rc != null) rc.CamDis = 14; // Framed for 11.4m vehicle
 
             // Rear jet exhaust particle
             Transform smoke = root.transform.Find("ExhustedSmoke (1)");
-            if (smoke != null) smoke.localPosition = new Vector3(0.0f, 1.30f, -7.60f);
+            if (smoke != null) smoke.localPosition = new Vector3(0.0f, 1.00f, -5.70f);
 
             Transform triggerKill = root.transform.Find("TriggerKill");
-            if (triggerKill != null) triggerKill.localPosition = new Vector3(0.0f, 1.00f, 7.60f);
+            if (triggerKill != null) triggerKill.localPosition = new Vector3(0.0f, 0.80f, 5.70f);
 
-            // 6. Hitbox: Fine-tuned two-stage vehicle colliders + 2.5X expanded Sit Trigger
+            // 6. Accurate Hitbox & Right-Side Large Sit Trigger
             BoxCollider[] colliders = root.GetComponents<BoxCollider>();
             int nonTriggerCount = 0;
             foreach (var col in colliders)
             {
                 if (col.isTrigger)
                 {
-                    // 2.5X Large Sit Button Area: covers right flank and midsection generously
-                    col.center = new Vector3(2.50f, 2.00f, 0.00f);
-                    col.size = new Vector3(9.00f, 4.50f, 11.00f);
+                    // Large Sit Button Area towards the right side:
+                    // Center X = 3.80m, Size X = 5.00m (covers X = 1.3m to 6.3m on the right side)
+                    // Length = 7.00m, Height = 2.50m
+                    col.center = new Vector3(3.80f, 1.20f, 0.50f);
+                    col.size = new Vector3(5.00f, 2.50f, 7.00f);
                 }
                 else
                 {
                     if (nonTriggerCount == 0)
                     {
-                        // Stage 1: Lower Chassis Collider (low sleek profile matching hood & flanks)
-                        // Height 1.8m: bottom at 0.8m (above wheels), top at 2.6m
-                        col.center = new Vector3(0.0f, 1.70f, 0.0f);
-                        col.size = new Vector3(6.80f, 1.80f, 15.20f);
-                        nonTriggerCount++;
-                    }
-                    else if (nonTriggerCount == 1)
-                    {
-                        // Stage 2: Rear Cockpit & Bat Fin Collider (matches taller cockpit and 7.4m wide fins)
-                        // Height 2.2m: bottom at 1.7m, top at 3.9m (exact fin peak)
-                        col.center = new Vector3(0.0f, 2.80f, -3.50f);
-                        col.size = new Vector3(7.40f, 2.20f, 8.00f);
+                        // Accurate 1:1 Solid Car Hitbox:
+                        // Width: 5.20m, Height: 2.20m (bottom at 0.55m, top at 2.75m), Length: 11.40m
+                        col.center = new Vector3(0.0f, 1.65f, 0.0f);
+                        col.size = new Vector3(5.20f, 2.20f, 11.40f);
                         nonTriggerCount++;
                     }
                     else
@@ -209,7 +205,7 @@ public class SetupBatmobileMod
             }
 
             PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
-            Debug.Log("[SetupBatmobileMod] 🎉 Successfully configured fine-tuned hitbox and 2.5X sit trigger area!");
+            Debug.Log("[SetupBatmobileMod] 🎉 Successfully configured Batmobile at 75% size with accurate hitbox and right-side sit area!");
         }
         finally
         {
@@ -227,11 +223,11 @@ public class SetupBatmobileMod
             if (wc != null)
             {
                 wc.radius = radius;
-                wc.suspensionDistance = 0.35f;
+                wc.suspensionDistance = 0.25f;
                 JointSpring js = wc.suspensionSpring;
-                js.spring = 55000f; // Stiff anti-dive spring so braking doesn't scrape ground
-                js.damper = 6500f;
-                js.targetPosition = 0.4f; // Elevated ride height
+                js.spring = 45000f;
+                js.damper = 5500f;
+                js.targetPosition = 0.45f;
                 wc.suspensionSpring = js;
             }
         }
@@ -267,7 +263,7 @@ public class SetupBatmobileMod
                             mr.sharedMaterials = new Material[] { tireMat, rimMat };
                         }
                     }
-                    Debug.Log("[SetupBatmobileMod] Assigned dual-material wheel mesh to " + modelPath + "/" + meshChildName);
+                    Debug.Log("[SetupBatmobileMod] Assigned wheel mesh to " + modelPath + "/" + meshChildName);
                 }
             }
         }

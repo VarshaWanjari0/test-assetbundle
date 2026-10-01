@@ -1,6 +1,6 @@
 # Batmobile Materials
 newmtl Batmobile_Body
-Kd 0.05 0.05 0.05
+Kd 0.03 0.03 0.03
 Ks 0.8 0.8 0.8
 Ns 60
 
