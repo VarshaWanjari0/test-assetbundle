@@ -33,7 +33,7 @@ public class SetupBatmobileMod
         GameObject root = PrefabUtility.LoadPrefabContents(prefabPath);
         try
         {
-            Debug.Log("[SetupBatmobileMod] Configuring Batmobile based on Truck.glb inspection: single unified solid body, freeze door rigidbodies, disable TriggerKill, 2.5x larger sit button...");
+            Debug.Log("[SetupBatmobileMod] Restoring proven 5c75921 architecture (no falling on touch) with 2.5x larger sit button...");
 
             // 1. Swap Truck Body Mesh on carzyCar/truck/Cargodoor_left
             Transform carzyCar = root.transform.Find("carzyCar");
@@ -53,7 +53,7 @@ public class SetupBatmobileMod
                     Transform body = truck.Find("Cargodoor_left");
                     if (body != null)
                     {
-                        body.localPosition = new Vector3(0.0f, 0.10f, 0.0f);
+                        body.localPosition = Vector3.zero;
                         body.localRotation = Quaternion.identity;
                         body.localScale = Vector3.one;
 
@@ -73,13 +73,13 @@ public class SetupBatmobileMod
                                     mr.sharedMaterials = new Material[] { batMat };
                                 }
                             }
-                            Debug.Log("[SetupBatmobileMod] Batmobile body assigned successfully!");
+                            Debug.Log("[SetupBatmobileMod] Body mesh assigned successfully!");
                         }
                     }
                 }
             }
 
-            // 2. Setup 4 Wheels for 75% size (radius = 0.66m) matching Truck.glb physics
+            // 2. Setup 4 Wheels with calibrated positions (identical to 5c75921)
             float wheelRadius = 0.66f;
             Vector3 posFL = new Vector3(-2.00f, 0.74f,  3.58f);
             Vector3 posFR = new Vector3( 2.00f, 0.74f,  3.58f);
@@ -91,7 +91,41 @@ public class SetupBatmobileMod
             SetupWheel(root, "Wheel collider/Col RL", "Wheel Model/RL", "wheel_RL", posRL, wheelRadius, "Assets/Models/wheel_RL.obj");
             SetupWheel(root, "Wheel collider/Col RR", "Wheel Model/RR", "wheel_RL", posRR, wheelRadius, "Assets/Models/wheel_RL.obj");
 
-            // 3. Remove steering wheel model
+            // 3. Hide old truck doors so they do not overlap (EXACTLY like 5c75921 - keep door colliders intact!)
+            Transform doorFL = root.transform.Find("Doors/DoorFL/Door_Right");
+            if (doorFL != null)
+            {
+                MeshRenderer mr = doorFL.GetComponent<MeshRenderer>();
+                if (mr != null) mr.enabled = false;
+            }
+            Transform doorFR = root.transform.Find("Doors/DoorFR/Door_Right (1)");
+            if (doorFR != null)
+            {
+                MeshRenderer mr = doorFR.GetComponent<MeshRenderer>();
+                if (mr != null) mr.enabled = false;
+            }
+
+            // 4. Cockpit & Interaction Points (From 5c75921 with lowered seat)
+            Transform doorPos = root.transform.Find("DoorPos");
+            if (doorPos != null)
+            {
+                doorPos.localPosition = new Vector3(2.60f, 0.25f, -0.40f);
+                doorPos.localScale = Vector3.one;
+            }
+
+            Transform sitPos = root.transform.Find("SitPosL");
+            if (sitPos != null)
+            {
+                sitPos.localPosition = new Vector3(0.45f, 0.20f, -0.40f); // Lowered so head is safely inside the car
+                sitPos.localScale = new Vector3(0.85f, 0.85f, 0.85f);
+            }
+
+            Transform interiorCam = root.transform.Find("Interior/InteriorCam");
+            if (interiorCam != null) interiorCam.localPosition = new Vector3(0.45f, 1.35f, -0.35f);
+
+            Transform cam = root.transform.Find("Cam");
+            if (cam != null) cam.localPosition = new Vector3(0.0f, 2.20f, -6.50f);
+
             Transform steerDummy = root.transform.Find("steering_dummy");
             if (steerDummy != null)
             {
@@ -102,93 +136,59 @@ public class SetupBatmobileMod
                 steerDummy.localScale = Vector3.zero;
             }
 
-            // 4. CRITICAL FIX: Freeze Truck Door Rigidbodies completely!
-            // In Truck.glb, DoorFL and DoorFR have 250kg dynamic rigidbodies.
-            // Disabling their colliders without freezing them allowed them to swing/drop under gravity and strike the player!
-            Transform doors = root.transform.Find("Doors");
-            if (doors != null)
-            {
-                foreach (var rb in doors.GetComponentsInChildren<Rigidbody>(true))
-                {
-                    rb.isKinematic = true;
-                    rb.useGravity = false;
-                    rb.detectCollisions = false;
-                    rb.mass = 0.001f;
-                }
-                foreach (var col in doors.GetComponentsInChildren<Collider>(true))
-                {
-                    col.enabled = false;
-                }
-                foreach (var mr in doors.GetComponentsInChildren<Renderer>(true))
-                {
-                    mr.enabled = false;
-                }
-            }
-
-            // 5. Cockpit Seating: Tucked inside car with head safe
-            Vector3 cockpitSitPos = new Vector3(0.0f, -0.65f, -1.80f);
-            Transform sitPos = root.transform.Find("SitPosL");
-            if (sitPos != null)
-            {
-                sitPos.localPosition = cockpitSitPos;
-                sitPos.localScale = new Vector3(0.85f, 0.85f, 0.85f);
-            }
-
-            Transform leftFoot = root.transform.Find("LeftFoot");
-            if (leftFoot != null) leftFoot.localPosition = cockpitSitPos;
-
-            Transform rightFoot = root.transform.Find("RightFoot");
-            if (rightFoot != null) rightFoot.localPosition = cockpitSitPos;
-
-            Transform interior = root.transform.Find("Interior");
-            if (interior != null) interior.localPosition = cockpitSitPos;
-
-            Transform interiorCam = root.transform.Find("Interior/InteriorCam");
-            if (interiorCam != null) interiorCam.localPosition = new Vector3(0.0f, 1.60f, 0.0f);
+            Transform smoke = root.transform.Find("ExhustedSmoke (1)");
+            if (smoke != null) smoke.localPosition = new Vector3(0.0f, 0.90f, -5.70f);
 
             Transform playerProtect = root.transform.Find("Player Protect");
             if (playerProtect != null)
             {
-                playerProtect.localPosition = new Vector3(0.0f, 1.00f, -1.80f);
+                playerProtect.localPosition = new Vector3(0.45f, 1.05f, -0.40f);
                 BoxCollider ppCol = playerProtect.GetComponent<BoxCollider>();
                 if (ppCol != null)
                 {
-                    ppCol.enabled = false;
+                    ppCol.center = Vector3.zero;
+                    ppCol.size = new Vector3(1.20f, 1.20f, 1.20f);
+                    ppCol.enabled = true;
                 }
             }
 
-            // 6. Door Position & 2.5x Larger Sit Trigger
-            // Placing DoorPos at (2.80, 0.40, 0.30) right beside the 2.40m car body
-            Vector3 doorPosition = new Vector3(2.80f, 0.40f, 0.30f);
-            Transform doorPos = root.transform.Find("DoorPos");
-            if (doorPos != null)
+            Transform triggerKill = root.transform.Find("TriggerKill");
+            if (triggerKill != null) triggerKill.localPosition = new Vector3(0.0f, 0.70f, 5.80f);
+
+            // 5. Root Colliders (EXACTLY like 5c75921, with 2.5x larger sit button)
+            BoxCollider[] colliders = root.GetComponents<BoxCollider>();
+            int nonTriggerCount = 0;
+            foreach (var col in colliders)
             {
-                doorPos.localPosition = doorPosition;
-                doorPos.localScale = Vector3.one;
+                if (col.isTrigger)
+                {
+                    // 2.5x larger sit button trigger
+                    col.center = new Vector3(2.80f, 1.00f, -0.40f);
+                    col.size = new Vector3(4.50f, 2.50f, 5.00f);
+                }
+                else
+                {
+                    if (nonTriggerCount == 0)
+                    {
+                        // Clean solid chassis box from 5c75921 that NEVER knocked down the player
+                        col.center = new Vector3(0.0f, 1.20f, 0.0f);
+                        col.size = new Vector3(3.60f, 1.80f, 11.50f);
+                        nonTriggerCount++;
+                    }
+                    else
+                    {
+                        col.size = Vector3.zero;
+                    }
+                }
             }
 
-            // Camera Look-at Pivot
-            Transform cam = root.transform.Find("Cam");
-            if (cam != null) cam.localPosition = new Vector3(0.0f, 1.60f, 0.0f);
-
-            RidingCar rc = root.GetComponent<RidingCar>();
-            if (rc != null) rc.CamDis = 14;
-
-            // 7. Indestructibility, 75% Acceleration (60,000 Torque), and Powerful Braking
+            // 6. Indestructibility, 75% Acceleration (60,000 Torque), and Extreme 5000 Speed
             CarControl cc = root.GetComponent<CarControl>();
             if (cc != null)
             {
                 cc.topSpeed = 5000f;
                 cc.reverseSpeed = 5000f;
                 cc.maxTorque = 60000f; // 75% acceleration
-            }
-
-            Rigidbody carRb = root.GetComponent<Rigidbody>();
-            if (carRb != null)
-            {
-                carRb.mass = 4000f;
-                carRb.drag = 0.25f; // Controlled drag to aid powerful braking
-                carRb.angularDrag = 1.5f;
             }
 
             ExplosionVehicle ev = root.GetComponent<ExplosionVehicle>();
@@ -202,75 +202,9 @@ public class SetupBatmobileMod
             if (cic != null)
             {
                 cic.damage = false;
-                cic.enabled = false;
             }
 
-            // Rear jet exhaust particle
-            Transform smoke = root.transform.Find("ExhustedSmoke (1)");
-            if (smoke != null) smoke.localPosition = new Vector3(0.0f, 1.00f, -5.70f);
-
-            // 8. Disable TriggerKill completely so it can NEVER knock down the player on touch!
-            Transform triggerKill = root.transform.Find("TriggerKill");
-            if (triggerKill != null)
-            {
-                BoxCollider tkCol = triggerKill.GetComponent<BoxCollider>();
-                if (tkCol != null)
-                {
-                    tkCol.size = Vector3.zero;
-                    tkCol.enabled = false;
-                }
-                triggerKill.gameObject.SetActive(false);
-            }
-
-            // 9. Single Unified Solid Box Collider (Exactly Like Original Truck.glb!)
-            // Truck.glb had ONE single 12.9m long box collider covering the entire body!
-            // No stepped gaps, no seams where character controller can trip!
-            List<BoxCollider> solidCols = new List<BoxCollider>();
-            BoxCollider triggerCol = null;
-
-            foreach (var col in root.GetComponents<BoxCollider>())
-            {
-                if (col.isTrigger)
-                {
-                    if (triggerCol == null) triggerCol = col;
-                }
-                else
-                {
-                    solidCols.Add(col);
-                }
-            }
-
-            if (triggerCol == null)
-            {
-                triggerCol = root.AddComponent<BoxCollider>();
-                triggerCol.isTrigger = true;
-            }
-
-            // 2.5x Larger Sit Trigger covering the entire right side of the car
-            triggerCol.center = new Vector3(3.20f, 1.20f, 0.30f);
-            triggerCol.size = new Vector3(4.50f, 2.80f, 6.00f);
-
-            while (solidCols.Count < 1)
-            {
-                BoxCollider newSolid = root.AddComponent<BoxCollider>();
-                newSolid.isTrigger = false;
-                solidCols.Add(newSolid);
-            }
-
-            // Main Unified Solid Body: Width 4.80m (shields all 4 wheels), Height 1.80m (Y 0.45 to 2.25m), Length 11.40m
-            solidCols[0].center = new Vector3(0.0f, 1.35f, 0.35f);
-            solidCols[0].size = new Vector3(4.80f, 1.80f, 11.40f);
-            solidCols[0].enabled = true;
-            solidCols[0].isTrigger = false;
-
-            // Disable any extra colliders on root to maintain clean single-collider architecture like Truck.glb
-            for (int i = 1; i < solidCols.Count; i++)
-            {
-                solidCols[i].size = Vector3.zero;
-                solidCols[i].enabled = false;
-            }
-
-            // 10. Tag all assets into AssetBundle 'rgs'
+            // 7. Tag all assets into AssetBundle 'rgs'
             string[] allFiles = Directory.GetFiles("Assets", "*.*", SearchOption.AllDirectories);
             foreach (string file in allFiles)
             {
@@ -281,7 +215,7 @@ public class SetupBatmobileMod
             }
 
             PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
-            Debug.Log("[SetupBatmobileMod] 🎉 Successfully configured Batmobile matching Truck.glb architecture!");
+            Debug.Log("[SetupBatmobileMod] 🎉 Successfully configured Batmobile matching proven 5c75921 architecture!");
         }
         finally
         {
@@ -296,26 +230,7 @@ public class SetupBatmobileMod
         {
             col.localPosition = pos;
             WheelCollider wc = col.GetComponent<WheelCollider>();
-            if (wc != null)
-            {
-                wc.radius = radius;
-                wc.suspensionDistance = 0.30f;
-                JointSpring js = wc.suspensionSpring;
-                js.spring = 45000f;
-                js.damper = 5500f;
-                js.targetPosition = 0.45f;
-                wc.suspensionSpring = js;
-
-                // High traction friction curves for powerful braking and grip
-                wc.wheelDampingRate = 0.5f;
-                WheelFrictionCurve ff = wc.forwardFriction;
-                ff.stiffness = 2.0f;
-                wc.forwardFriction = ff;
-
-                WheelFrictionCurve sf = wc.sidewaysFriction;
-                sf.stiffness = 1.5f;
-                wc.sidewaysFriction = sf;
-            }
+            if (wc != null) wc.radius = radius;
         }
 
         Transform m = root.transform.Find(modelPath);
