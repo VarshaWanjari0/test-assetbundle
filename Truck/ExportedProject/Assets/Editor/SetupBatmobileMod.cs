@@ -32,7 +32,7 @@ public class SetupBatmobileMod
         GameObject root = PrefabUtility.LoadPrefabContents(prefabPath);
         try
         {
-            Debug.Log("[SetupBatmobileMod] Configuring 2X Batmobile on rgs.prefab...");
+            Debug.Log("[SetupBatmobileMod] Configuring 1.25X Batmobile with elevated clearance and high metallic finish...");
 
             // 1. Swap Truck Body Mesh on carzyCar/truck/Cargodoor_left
             Transform carzyCar = root.transform.Find("carzyCar");
@@ -72,25 +72,25 @@ public class SetupBatmobileMod
                                     mr.sharedMaterials = new Material[] { batMat };
                                 }
                             }
-                            Debug.Log("[SetupBatmobileMod] Dark stealth Batmobile body mesh assigned!");
+                            Debug.Log("[SetupBatmobileMod] High-metallic Batmobile body assigned!");
                         }
                     }
                 }
             }
 
-            // 2. Setup 4 Wheels with 2X scale positions and radius = 1.42m
-            float wheelRadius = 1.42f;
-            Vector3 posFL = new Vector3(-4.26f, 1.57f,  7.64f);
-            Vector3 posFR = new Vector3( 4.26f, 1.57f,  7.64f);
-            Vector3 posRL = new Vector3(-5.08f, 1.57f, -6.32f);
-            Vector3 posRR = new Vector3( 5.08f, 1.57f, -6.32f);
+            // 2. Setup 4 Wheels for 1.25X scale with radius = 0.89m and reinforced suspension
+            float wheelRadius = 0.89f;
+            Vector3 posFL = new Vector3(-2.66f, 0.98f,  4.78f);
+            Vector3 posFR = new Vector3( 2.66f, 0.98f,  4.78f);
+            Vector3 posRL = new Vector3(-3.18f, 0.98f, -3.95f);
+            Vector3 posRR = new Vector3( 3.18f, 0.98f, -3.95f);
 
             SetupWheel(root, "Wheel collider/Col FL", "Wheel Model/FL", "wheel_FL", posFL, wheelRadius, "Assets/Models/wheel_FL.obj");
             SetupWheel(root, "Wheel collider/Col FR", "Wheel Model/FR", "wheel_FL", posFR, wheelRadius, "Assets/Models/wheel_FR.obj");
             SetupWheel(root, "Wheel collider/Col RL", "Wheel Model/RL", "wheel_RL", posRL, wheelRadius, "Assets/Models/wheel_RL.obj");
             SetupWheel(root, "Wheel collider/Col RR", "Wheel Model/RR", "wheel_RL", posRR, wheelRadius, "Assets/Models/wheel_RR.obj");
 
-            // 3. Remove/Hide steering model as requested
+            // 3. Remove steering wheel model
             Transform steerDummy = root.transform.Find("steering_dummy");
             if (steerDummy != null)
             {
@@ -115,8 +115,8 @@ public class SetupBatmobileMod
                 if (mr != null) mr.enabled = false;
             }
 
-            // 4. Make Player sit inside deep in the back (Z = -3.5m) so character is completely invisible inside
-            Vector3 invisibleSitPos = new Vector3(0.0f, 1.80f, -3.50f);
+            // 4. Invisible rear cockpit seating
+            Vector3 invisibleSitPos = new Vector3(0.0f, 1.40f, -2.20f);
             Transform sitPos = root.transform.Find("SitPosL");
             if (sitPos != null) sitPos.localPosition = invisibleSitPos;
 
@@ -130,7 +130,7 @@ public class SetupBatmobileMod
             if (interior != null) interior.localPosition = invisibleSitPos;
 
             Transform interiorCam = root.transform.Find("Interior/InteriorCam");
-            if (interiorCam != null) interiorCam.localPosition = new Vector3(0.0f, 0.40f, 0.20f);
+            if (interiorCam != null) interiorCam.localPosition = new Vector3(0.0f, 0.35f, 0.15f);
 
             Transform playerProtect = root.transform.Find("Player Protect");
             if (playerProtect != null)
@@ -140,29 +140,29 @@ public class SetupBatmobileMod
                 if (ppCol != null)
                 {
                     ppCol.center = Vector3.zero;
-                    ppCol.size = new Vector3(2.50f, 2.00f, 2.50f);
+                    ppCol.size = new Vector3(2.00f, 1.80f, 2.00f);
                 }
             }
 
-            // Door approach position on the right side
+            // Door approach position on the right flank
             Transform doorPos = root.transform.Find("DoorPos");
-            if (doorPos != null) doorPos.localPosition = new Vector3(5.50f, 0.50f, 0.00f);
+            if (doorPos != null) doorPos.localPosition = new Vector3(3.60f, 0.30f, 0.00f);
 
-            // 5. Fix Rotating Camera: Orbit geometric center of the car (0, 2.6, 0)
+            // 5. Camera Look-at Pivot: Geometric center of vehicle (0, 2.0, 0)
             Transform cam = root.transform.Find("Cam");
-            if (cam != null) cam.localPosition = new Vector3(0.0f, 2.60f, 0.00f);
+            if (cam != null) cam.localPosition = new Vector3(0.0f, 2.00f, 0.00f);
 
             RidingCar rc = root.GetComponent<RidingCar>();
-            if (rc != null) rc.CamDis = 26; // Increased distance to frame 2X car perfectly
+            if (rc != null) rc.CamDis = 17; // Properly framed for 15.2m car
 
             // Rear jet exhaust particle
             Transform smoke = root.transform.Find("ExhustedSmoke (1)");
-            if (smoke != null) smoke.localPosition = new Vector3(0.0f, 1.80f, -12.20f);
+            if (smoke != null) smoke.localPosition = new Vector3(0.0f, 1.30f, -7.60f);
 
             Transform triggerKill = root.transform.Find("TriggerKill");
-            if (triggerKill != null) triggerKill.localPosition = new Vector3(0.0f, 1.40f, 11.50f);
+            if (triggerKill != null) triggerKill.localPosition = new Vector3(0.0f, 1.00f, 7.60f);
 
-            // 6. Resize Hitbox (Solid BoxCollider + Door Entry Trigger)
+            // 6. Hitbox (Elevated solid BoxCollider + Door Entry Trigger)
             BoxCollider[] colliders = root.GetComponents<BoxCollider>();
             int nonTriggerCount = 0;
             foreach (var col in colliders)
@@ -170,16 +170,16 @@ public class SetupBatmobileMod
                 if (col.isTrigger)
                 {
                     // Door Entry Trigger
-                    col.center = new Vector3(5.50f, 1.50f, 0.00f);
-                    col.size = new Vector3(4.00f, 3.00f, 6.00f);
+                    col.center = new Vector3(3.60f, 1.20f, 0.00f);
+                    col.size = new Vector3(2.50f, 2.00f, 4.00f);
                 }
                 else
                 {
                     if (nonTriggerCount == 0)
                     {
-                        // 2X Batmobile Main Solid Hitbox: 9.5m wide, 3.8m high, 23.5m long
-                        col.center = new Vector3(0.0f, 2.60f, 0.0f);
-                        col.size = new Vector3(9.50f, 3.80f, 23.50f);
+                        // 1.25X Batmobile Solid Hitbox: 6.5m wide, 2.8m high, 15.0m long
+                        col.center = new Vector3(0.0f, 2.20f, 0.0f);
+                        col.size = new Vector3(6.50f, 2.80f, 15.00f);
                         nonTriggerCount++;
                     }
                     else
@@ -200,7 +200,7 @@ public class SetupBatmobileMod
             }
 
             PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
-            Debug.Log("[SetupBatmobileMod] 🎉 Successfully configured 2X Batmobile with stealth paint, dual-texture wheels, center camera, and invisible cockpit seating!");
+            Debug.Log("[SetupBatmobileMod] 🎉 Successfully configured 1.25X Batmobile with 0.8 metallic paint, anti-bottoming suspension, and center camera!");
         }
         finally
         {
@@ -218,7 +218,12 @@ public class SetupBatmobileMod
             if (wc != null)
             {
                 wc.radius = radius;
-                wc.suspensionDistance = 0.5f;
+                wc.suspensionDistance = 0.35f;
+                JointSpring js = wc.suspensionSpring;
+                js.spring = 55000f; // Stiff anti-dive spring so braking doesn't scrape ground
+                js.damper = 6500f;
+                js.targetPosition = 0.4f; // Elevated ride height
+                wc.suspensionSpring = js;
             }
         }
 

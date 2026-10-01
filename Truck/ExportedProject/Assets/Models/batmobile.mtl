@@ -1,8 +1,8 @@
 # Batmobile Materials
 newmtl Batmobile_Body
-Kd 0.03 0.03 0.03
-Ks 0.2 0.2 0.2
-Ns 30
+Kd 0.05 0.05 0.05
+Ks 0.8 0.8 0.8
+Ns 60
 
 newmtl Tire
 Kd 0.1 0.1 0.1
@@ -10,6 +10,6 @@ Ks 0.05 0.05 0.05
 Ns 10
 
 newmtl Rim
-Kd 0.35 0.35 0.38
-Ks 0.8 0.8 0.85
-Ns 80
+Kd 0.45 0.45 0.48
+Ks 0.9 0.9 0.95
+Ns 90
