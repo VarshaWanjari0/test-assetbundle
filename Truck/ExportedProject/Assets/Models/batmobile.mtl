@@ -1,9 +1,15 @@
-newmtl Base
-Kd 0.08 0.08 0.08
-newmtl Glass
-Kd 0.2 0.2 0.2
-d 0.5
-newmtl Emmission
-Kd 1 0.3 0
-newmtl Emmission.red
-Kd 1 0 0
+# Batmobile Materials
+newmtl Batmobile_Body
+Kd 0.03 0.03 0.03
+Ks 0.2 0.2 0.2
+Ns 30
+
+newmtl Tire
+Kd 0.1 0.1 0.1
+Ks 0.05 0.05 0.05
+Ns 10
+
+newmtl Rim
+Kd 0.35 0.35 0.38
+Ks 0.8 0.8 0.85
+Ns 80
