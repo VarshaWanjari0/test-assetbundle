@@ -105,7 +105,28 @@ public class SetupBatmobileMod
                 if (mr != null) mr.enabled = false;
             }
 
-            // 4. Cockpit & Interaction Points (From 5c75921 with lowered seat)
+            // 4. Cockpit Seating (Centered in Batmobile cabin, lowered so head is tucked safely inside)
+            Vector3 cockpitSitPos = new Vector3(0.0f, 0.20f, -1.80f);
+            Transform sitPos = root.transform.Find("SitPosL");
+            if (sitPos != null)
+            {
+                sitPos.localPosition = cockpitSitPos;
+                sitPos.localScale = new Vector3(0.85f, 0.85f, 0.85f);
+            }
+
+            Transform leftFoot = root.transform.Find("LeftFoot");
+            if (leftFoot != null) leftFoot.localPosition = cockpitSitPos;
+
+            Transform rightFoot = root.transform.Find("RightFoot");
+            if (rightFoot != null) rightFoot.localPosition = cockpitSitPos;
+
+            Transform interior = root.transform.Find("Interior");
+            if (interior != null) interior.localPosition = cockpitSitPos;
+
+            Transform interiorCam = root.transform.Find("Interior/InteriorCam");
+            if (interiorCam != null) interiorCam.localPosition = new Vector3(0.0f, 0.70f, 0.20f);
+
+            // Door Interaction Point & 2.5x Larger Trigger Area
             Transform doorPos = root.transform.Find("DoorPos");
             if (doorPos != null)
             {
@@ -113,18 +134,12 @@ public class SetupBatmobileMod
                 doorPos.localScale = Vector3.one;
             }
 
-            Transform sitPos = root.transform.Find("SitPosL");
-            if (sitPos != null)
-            {
-                sitPos.localPosition = new Vector3(0.45f, 0.20f, -0.40f); // Lowered so head is safely inside the car
-                sitPos.localScale = new Vector3(0.85f, 0.85f, 0.85f);
-            }
-
-            Transform interiorCam = root.transform.Find("Interior/InteriorCam");
-            if (interiorCam != null) interiorCam.localPosition = new Vector3(0.45f, 1.35f, -0.35f);
-
+            // Camera: Orbit geometric center of the Batmobile
             Transform cam = root.transform.Find("Cam");
-            if (cam != null) cam.localPosition = new Vector3(0.0f, 2.20f, -6.50f);
+            if (cam != null) cam.localPosition = new Vector3(0.0f, 1.60f, 0.0f);
+
+            RidingCar rc = root.GetComponent<RidingCar>();
+            if (rc != null) rc.CamDis = 14;
 
             Transform steerDummy = root.transform.Find("steering_dummy");
             if (steerDummy != null)
@@ -136,9 +151,11 @@ public class SetupBatmobileMod
                 steerDummy.localScale = Vector3.zero;
             }
 
+            // Rear jet exhaust particle
             Transform smoke = root.transform.Find("ExhustedSmoke (1)");
-            if (smoke != null) smoke.localPosition = new Vector3(0.0f, 0.90f, -5.70f);
+            if (smoke != null) smoke.localPosition = new Vector3(0.0f, 1.00f, -5.70f);
 
+            // NO-FALL FIX: Player Protect solid shield starting 0.24m above road
             Transform playerProtect = root.transform.Find("Player Protect");
             if (playerProtect != null)
             {
@@ -155,7 +172,7 @@ public class SetupBatmobileMod
             Transform triggerKill = root.transform.Find("TriggerKill");
             if (triggerKill != null) triggerKill.localPosition = new Vector3(0.0f, 0.70f, 5.80f);
 
-            // 5. Root Colliders (EXACTLY like 5c75921, with 2.5x larger sit button)
+            // 5. Root Colliders (Proven single solid chassis box + 2.5x larger sit button)
             BoxCollider[] colliders = root.GetComponents<BoxCollider>();
             int nonTriggerCount = 0;
             foreach (var col in colliders)
@@ -170,7 +187,7 @@ public class SetupBatmobileMod
                 {
                     if (nonTriggerCount == 0)
                     {
-                        // Clean solid chassis box from 5c75921 that NEVER knocked down the player
+                        // Clean solid chassis box that NEVER knocked down the player
                         col.center = new Vector3(0.0f, 1.20f, 0.0f);
                         col.size = new Vector3(3.60f, 1.80f, 11.50f);
                         nonTriggerCount++;
@@ -182,13 +199,20 @@ public class SetupBatmobileMod
                 }
             }
 
-            // 6. Indestructibility, 75% Acceleration (60,000 Torque), and Extreme 5000 Speed
+            // 6. Indestructibility, 75% Acceleration (60,000 Torque), Extreme 5000 Speed, and Balanced Braking Drag
             CarControl cc = root.GetComponent<CarControl>();
             if (cc != null)
             {
                 cc.topSpeed = 5000f;
                 cc.reverseSpeed = 5000f;
                 cc.maxTorque = 60000f; // 75% acceleration
+            }
+
+            Rigidbody carRb = root.GetComponent<Rigidbody>();
+            if (carRb != null)
+            {
+                carRb.drag = 0.35f; // Balanced braking drag to balance 5000 speed
+                carRb.angularDrag = 2.0f;
             }
 
             ExplosionVehicle ev = root.GetComponent<ExplosionVehicle>();
