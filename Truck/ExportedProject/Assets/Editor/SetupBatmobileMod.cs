@@ -102,18 +102,19 @@ public class SetupBatmobileMod
                 steerDummy.localScale = Vector3.zero;
             }
 
-            // Hide old truck doors
-            Transform doorFL = root.transform.Find("Doors/DoorFL/Door_Right");
-            if (doorFL != null)
+            // Disable truck doors and their colliders completely so no invisible barriers exist
+            Transform doors = root.transform.Find("Doors");
+            if (doors != null)
             {
-                MeshRenderer mr = doorFL.GetComponent<MeshRenderer>();
-                if (mr != null) mr.enabled = false;
-            }
-            Transform doorFR = root.transform.Find("Doors/DoorFR/Door_Right (1)");
-            if (doorFR != null)
-            {
-                MeshRenderer mr = doorFR.GetComponent<MeshRenderer>();
-                if (mr != null) mr.enabled = false;
+                foreach (var mr in doors.GetComponentsInChildren<MeshRenderer>(true))
+                {
+                    mr.enabled = false;
+                }
+                foreach (var col in doors.GetComponentsInChildren<BoxCollider>(true))
+                {
+                    col.size = Vector3.zero;
+                    col.enabled = false;
+                }
             }
 
             // 4. Invisible rear cockpit seating
@@ -141,15 +142,15 @@ public class SetupBatmobileMod
                 if (ppCol != null)
                 {
                     ppCol.center = Vector3.zero;
-                    ppCol.size = new Vector3(1.80f, 1.50f, 1.80f);
+                    ppCol.size = new Vector3(1.20f, 1.20f, 1.20f);
                 }
             }
 
-            // 5. Stable Right-Side Sit Trigger & Co-located DoorPos
-            // Placing DoorPos at (3.00, 0.50, 0.50) with the trigger tightly enclosing it ensures:
-            // max distance from any point in the trigger to DoorPos is <= 2.34m (< 2.5m cutoff in RidingCar.Update).
-            // This guarantees the enter button STAYS permanently visible and does NOT disappear in a split second!
-            Vector3 doorPosition = new Vector3(3.00f, 0.50f, 0.50f);
+            // 5. Stable Right-Side Door Entry Area & Co-located DoorPos
+            // Placing DoorPos at (2.00, 0.25, 0.30) right beside the car body (X = 1.55m)
+            // Trigger reaches X = 0.90m to 3.50m, Z = -1.20m to 1.80m
+            // Max distance from any point in trigger to DoorPos is <= 2.13m (< 2.5m cutoff)
+            Vector3 doorPosition = new Vector3(2.00f, 0.25f, 0.30f);
             Transform doorPos = root.transform.Find("DoorPos");
             if (doorPos != null) doorPos.localPosition = doorPosition;
 
@@ -164,17 +165,27 @@ public class SetupBatmobileMod
             Transform smoke = root.transform.Find("ExhustedSmoke (1)");
             if (smoke != null) smoke.localPosition = new Vector3(0.0f, 1.00f, -5.70f);
 
+            // Front bumper kill trigger on NPCs (reset localPosition to zero so it doesn't double-offset)
             Transform triggerKill = root.transform.Find("TriggerKill");
-            if (triggerKill != null) triggerKill.localPosition = new Vector3(0.0f, 0.80f, 5.70f);
+            if (triggerKill != null)
+            {
+                triggerKill.localPosition = Vector3.zero;
+                BoxCollider tkCol = triggerKill.GetComponent<BoxCollider>();
+                if (tkCol != null)
+                {
+                    tkCol.center = new Vector3(0.0f, 0.80f, 5.50f);
+                    tkCol.size = new Vector3(3.20f, 0.80f, 0.60f);
+                }
+            }
 
-            // 6. Multiple Accurate Hitboxes & Generous Right-Side Sit Trigger
-            // Trigger: covers right-side entry (X: 1.5m to 4.5m, Z: -1.2m to 2.2m, Y: -0.1m to 1.7m)
-            // Volume = 18.36 m^3 (4.15x original truck trigger). All points within 2.34m of DoorPos.
-            // Hitboxes: 3 custom-fitted solid boxes matching Batmobile profile:
-            // - Front Nose/Hood: low sleek profile (width 4.40m, height 1.20m, length 2.80m)
-            // - Mid Cabin/Cockpit: mid chassis profile (width 4.85m, height 1.80m, length 4.50m)
-            // - Rear Fins & Fuselage: wide tall bat fins (width 5.50m, height 2.20m, length 4.30m)
-            // All 3 boxes have bottom at Y = 0.65m (clears road & wheels, so car never gets stuck on bumps/brakes)
+            // 6. Multiple Accurately Inset Hitboxes & Right-Side Sit Trigger
+            // CRITICAL: All solid hitboxes are strictly INSET inside the 3D visual mesh.
+            // There are NO invisible solid walls surrounding or protruding outside the car!
+            // - Mid body collider is width 3.00m (X = -1.50m to +1.50m) inside the 3.10m car body.
+            //   This allows the player to walk directly up to the car door without hitting any forcefield!
+            // - Front nose collider is width 3.40m, tightly inside the hood.
+            // - Rear chassis collider is width 4.20m, tightly inside the rear body.
+            // - All solid boxes bottom at Y = 0.65m (clears road & wheels so no getting stuck on brakes).
             List<BoxCollider> solidCols = new List<BoxCollider>();
             BoxCollider triggerCol = null;
 
@@ -196,8 +207,8 @@ public class SetupBatmobileMod
                 triggerCol.isTrigger = true;
             }
 
-            triggerCol.center = new Vector3(3.00f, 0.80f, 0.50f);
-            triggerCol.size = new Vector3(3.00f, 1.80f, 3.40f);
+            triggerCol.center = new Vector3(2.20f, 0.80f, 0.30f);
+            triggerCol.size = new Vector3(2.60f, 1.80f, 3.00f);
 
             while (solidCols.Count < 3)
             {
@@ -206,17 +217,17 @@ public class SetupBatmobileMod
                 solidCols.Add(newSolid);
             }
 
-            // Collider 1: Front Nose & Hood
-            solidCols[0].center = new Vector3(0.0f, 1.25f, 4.35f);
-            solidCols[0].size = new Vector3(4.40f, 1.20f, 2.80f);
+            // Collider 1: Front Nose & Hood (tightly inset inside front mesh, zero overhang)
+            solidCols[0].center = new Vector3(0.0f, 1.15f, 4.00f);
+            solidCols[0].size = new Vector3(3.40f, 1.00f, 3.00f);
 
-            // Collider 2: Mid Body & Cabin
-            solidCols[1].center = new Vector3(0.0f, 1.55f, 0.75f);
-            solidCols[1].size = new Vector3(4.85f, 1.80f, 4.50f);
+            // Collider 2: Mid Body & Cabin (width 3.00m strictly inside 3.10m doors, NO invisible side wall)
+            solidCols[1].center = new Vector3(0.0f, 1.45f, 0.70f);
+            solidCols[1].size = new Vector3(3.00f, 1.60f, 3.80f);
 
-            // Collider 3: Rear Body & Tall Bat Fins
-            solidCols[2].center = new Vector3(0.0f, 1.75f, -3.60f);
-            solidCols[2].size = new Vector3(5.50f, 2.20f, 4.30f);
+            // Collider 3: Rear Body & Fins (width 4.20m inside rear body, NO invisible rear wall)
+            solidCols[2].center = new Vector3(0.0f, 1.55f, -3.20f);
+            solidCols[2].size = new Vector3(4.20f, 1.80f, 4.20f);
 
             for (int i = 3; i < solidCols.Count; i++)
             {
