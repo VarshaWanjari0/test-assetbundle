@@ -33,7 +33,7 @@ public class SetupBatmobileMod
         GameObject root = PrefabUtility.LoadPrefabContents(prefabPath);
         try
         {
-            Debug.Log("[SetupBatmobileMod] Configuring Batmobile from working baseline with stable sit button and proper seating...");
+            Debug.Log("[SetupBatmobileMod] Configuring Batmobile v2: overlapping hitboxes, lowered cockpit seating, 75% accel, and powerful braking...");
 
             // 1. Swap Truck Body Mesh on carzyCar/truck/Cargodoor_left
             Transform carzyCar = root.transform.Find("carzyCar");
@@ -79,7 +79,7 @@ public class SetupBatmobileMod
                 }
             }
 
-            // 2. Setup 4 Wheels for 75% size (radius = 0.66m)
+            // 2. Setup 4 Wheels for 75% size (radius = 0.66m) with high brake friction
             float wheelRadius = 0.66f;
             Vector3 posFL = new Vector3(-2.00f, 0.74f,  3.58f);
             Vector3 posFR = new Vector3( 2.00f, 0.74f,  3.58f);
@@ -117,10 +117,14 @@ public class SetupBatmobileMod
                 }
             }
 
-            // 4. Cockpit Seating: Tucked cleanly inside the cockpit floorpan (0.45m above ground, NOT subterranean!)
-            Vector3 cockpitSitPos = new Vector3(0.0f, 0.45f, -1.80f);
+            // 4. Cockpit Seating: Sunk down by 1.10m so the head is 100% inside the car
+            Vector3 cockpitSitPos = new Vector3(0.0f, -0.65f, -1.80f);
             Transform sitPos = root.transform.Find("SitPosL");
-            if (sitPos != null) sitPos.localPosition = cockpitSitPos;
+            if (sitPos != null)
+            {
+                sitPos.localPosition = cockpitSitPos;
+                sitPos.localScale = new Vector3(0.85f, 0.85f, 0.85f); // Compact sitting posture to keep head tucked inside
+            }
 
             Transform leftFoot = root.transform.Find("LeftFoot");
             if (leftFoot != null) leftFoot.localPosition = cockpitSitPos;
@@ -141,18 +145,17 @@ public class SetupBatmobileMod
                 BoxCollider ppCol = playerProtect.GetComponent<BoxCollider>();
                 if (ppCol != null)
                 {
-                    // Disable player protect collider so it NEVER collides with or trips the player
-                    ppCol.enabled = false;
+                    ppCol.enabled = false; // Disabled so no physics clipping or character tripping
                 }
             }
 
-            // 5. Stable Right-Side Door Entry Area & Co-located DoorPos (From Last Working Version)
+            // 5. Stable Right-Side Door Entry Area & Co-located DoorPos (From Working Baseline)
             Vector3 doorPosition = new Vector3(2.00f, 0.25f, 0.30f);
             Transform doorPos = root.transform.Find("DoorPos");
             if (doorPos != null)
             {
                 doorPos.localPosition = doorPosition;
-                doorPos.localScale = Vector3.one; // Standard scale so distance checks work 100% reliably
+                doorPos.localScale = Vector3.one;
             }
 
             // Camera Look-at Pivot: Geometric center of vehicle (0, 1.60, 0)
@@ -160,15 +163,22 @@ public class SetupBatmobileMod
             if (cam != null) cam.localPosition = new Vector3(0.0f, 1.60f, 0.0f);
 
             RidingCar rc = root.GetComponent<RidingCar>();
-            if (rc != null) rc.CamDis = 14; // Framed for 11.4m vehicle
+            if (rc != null) rc.CamDis = 14;
 
-            // 5b. Indestructibility & Extreme 5000 Speed / Reverse
+            // 5b. Indestructibility, 75% Acceleration (60,000 Torque), and Powerful Braking Drag
             CarControl cc = root.GetComponent<CarControl>();
             if (cc != null)
             {
                 cc.topSpeed = 5000f;
                 cc.reverseSpeed = 5000f;
-                cc.maxTorque = 80000f;
+                cc.maxTorque = 60000f; // 75% of previous 80,000 torque as requested
+            }
+
+            Rigidbody rb = root.GetComponent<Rigidbody>();
+            if (rb != null)
+            {
+                rb.drag = 0.35f; // Balanced deceleration drag so brakes can rein in 5000 speed
+                rb.angularDrag = 2.0f;
             }
 
             ExplosionVehicle ev = root.GetComponent<ExplosionVehicle>();
@@ -188,7 +198,7 @@ public class SetupBatmobileMod
             Transform smoke = root.transform.Find("ExhustedSmoke (1)");
             if (smoke != null) smoke.localPosition = new Vector3(0.0f, 1.00f, -5.70f);
 
-            // Front bumper kill trigger on NPCs (reset localPosition to zero so it doesn't double-offset)
+            // Front bumper kill trigger on NPCs
             Transform triggerKill = root.transform.Find("TriggerKill");
             if (triggerKill != null)
             {
@@ -201,11 +211,10 @@ public class SetupBatmobileMod
                 }
             }
 
-            // 6. Solid Hitboxes & Right-Side Sit Trigger (From Last Working Version)
-            // Solid colliders strictly INSET inside the 3D visual mesh:
-            // - Mid body collider width 3.00m (inside 3.10m car body). Player walks directly to door with zero barrier!
-            // - Front nose collider width 3.40m inside hood.
-            // - Rear chassis collider width 3.80m, ending at Z = -4.90m (zero free-space overhang behind car).
+            // 6. Overlapping Solid Hitboxes with ~10% More Thickness & Ground Coverage
+            // Eliminates gap where character feet walked under car causing falling!
+            // - Solid colliders overlap along Z so there are no seams.
+            // - Bottom extends down to Y = 0.45m across entire car.
             List<BoxCollider> solidCols = new List<BoxCollider>();
             BoxCollider triggerCol = null;
 
@@ -227,7 +236,7 @@ public class SetupBatmobileMod
                 triggerCol.isTrigger = true;
             }
 
-            // Trigger identical to proven working version 8969078
+            // Stable Right-Side Door Trigger
             triggerCol.center = new Vector3(2.20f, 0.80f, 0.30f);
             triggerCol.size = new Vector3(2.60f, 1.80f, 3.00f);
 
@@ -238,17 +247,17 @@ public class SetupBatmobileMod
                 solidCols.Add(newSolid);
             }
 
-            // Collider 1: Front Nose & Hood
-            solidCols[0].center = new Vector3(0.0f, 1.15f, 4.00f);
-            solidCols[0].size = new Vector3(3.40f, 1.00f, 3.00f);
+            // Collider 1: Front Nose & Hood (height 1.20m, bottom at 0.45m, length 3.20m: Z 2.40 to 5.60)
+            solidCols[0].center = new Vector3(0.0f, 1.05f, 4.00f);
+            solidCols[0].size = new Vector3(3.50f, 1.20f, 3.20f);
 
-            // Collider 2: Mid Body & Cabin (width 3.00m allows player to reach door position 2.00m without tripping)
-            solidCols[1].center = new Vector3(0.0f, 1.45f, 0.70f);
-            solidCols[1].size = new Vector3(3.00f, 1.60f, 3.80f);
+            // Collider 2: Mid Body & Cabin (height 1.80m, bottom at 0.45m, length 4.10m: Z -1.35 to 2.75 -> overlaps front by 0.35m!)
+            solidCols[1].center = new Vector3(0.0f, 1.35f, 0.70f);
+            solidCols[1].size = new Vector3(3.15f, 1.80f, 4.10f);
 
-            // Collider 3: Rear Body & Fins (tightly stops at Z = -4.90m, zero overhang)
-            solidCols[2].center = new Vector3(0.0f, 1.45f, -3.10f);
-            solidCols[2].size = new Vector3(3.80f, 1.60f, 3.60f);
+            // Collider 3: Rear Body & Fins (height 1.80m, bottom at 0.45m, length 3.80m: Z -4.95 to -1.15 -> overlaps mid by 0.20m, ends at Z -4.95m!)
+            solidCols[2].center = new Vector3(0.0f, 1.35f, -3.05f);
+            solidCols[2].size = new Vector3(3.90f, 1.80f, 3.80f);
 
             for (int i = 3; i < solidCols.Count; i++)
             {
@@ -266,7 +275,7 @@ public class SetupBatmobileMod
             }
 
             PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
-            Debug.Log("[SetupBatmobileMod] 🎉 Successfully configured Batmobile from working baseline!");
+            Debug.Log("[SetupBatmobileMod] 🎉 Successfully configured Batmobile v2!");
         }
         finally
         {
@@ -290,6 +299,16 @@ public class SetupBatmobileMod
                 js.damper = 6500f;
                 js.targetPosition = 0.40f;
                 wc.suspensionSpring = js;
+
+                // Powerful braking grip and damping
+                wc.wheelDampingRate = 1.0f;
+                WheelFrictionCurve ff = wc.forwardFriction;
+                ff.stiffness = 2.5f; // High traction bite for strong braking
+                wc.forwardFriction = ff;
+
+                WheelFrictionCurve sf = wc.sidewaysFriction;
+                sf.stiffness = 2.0f; // Firm lateral control
+                wc.sidewaysFriction = sf;
             }
         }
 
