@@ -105,8 +105,8 @@ public class SetupBatmobileMod
                 if (mr != null) mr.enabled = false;
             }
 
-            // 4. Cockpit Seating (Centered in Batmobile cabin, lowered down inside cockpit)
-            Vector3 cockpitSitPos = new Vector3(0.0f, -0.20f, -1.80f);
+            // 4. Cockpit Seating (Centered in Batmobile cabin, lowered 0.60m down inside cockpit)
+            Vector3 cockpitSitPos = new Vector3(0.0f, -0.80f, -1.80f);
             Transform sitPos = root.transform.Find("SitPosL");
             if (sitPos != null)
             {
@@ -124,7 +124,7 @@ public class SetupBatmobileMod
             if (interior != null) interior.localPosition = cockpitSitPos;
 
             Transform interiorCam = root.transform.Find("Interior/InteriorCam");
-            if (interiorCam != null) interiorCam.localPosition = new Vector3(0.0f, 0.30f, 0.20f);
+            if (interiorCam != null) interiorCam.localPosition = new Vector3(0.0f, -0.20f, 0.20f);
 
             // Door Interaction Point & 2.5x Larger Trigger Area
             Transform doorPos = root.transform.Find("DoorPos");
@@ -151,9 +151,35 @@ public class SetupBatmobileMod
                 steerDummy.localScale = Vector3.zero;
             }
 
-            // Rear jet exhaust particle
+            // Rear jet exhaust particle: 5x larger with electric cyan nitro flame!
             Transform smoke = root.transform.Find("ExhustedSmoke (1)");
-            if (smoke != null) smoke.localPosition = new Vector3(0.0f, 1.00f, -5.70f);
+            if (smoke != null)
+            {
+                smoke.localPosition = new Vector3(0.0f, 1.00f, -5.70f);
+                smoke.localScale = new Vector3(5.0f, 5.0f, 5.0f); // 5x larger exhaust smoke!
+                ParticleSystem ps = smoke.GetComponent<ParticleSystem>();
+                if (ps != null)
+                {
+                    var main = ps.main;
+                    main.startSize = new ParticleSystem.MinMaxCurve(2.5f, 3.5f); // 5x larger particle size
+                    main.startSpeed = new ParticleSystem.MinMaxCurve(8.0f, 18.0f); // High-speed nitro jet stream
+                    main.startLifetime = new ParticleSystem.MinMaxCurve(0.4f, 0.8f);
+                    main.startColor = new ParticleSystem.MinMaxGradient(
+                        new Color(0.15f, 0.75f, 1.0f, 0.95f), // Cyan electric nitro
+                        new Color(0.35f, 0.90f, 1.0f, 1.0f)   // Glowing hot core
+                    );
+                }
+                ParticleSystemRenderer psr = smoke.GetComponent<ParticleSystemRenderer>();
+                if (psr != null)
+                {
+                    Material nitroMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/Material/Smoke4.mat");
+                    if (nitroMat != null)
+                    {
+                        nitroMat.SetColor("_TintColor", new Color(0.15f, 0.75f, 1.0f, 0.95f)); // Electric cyan nitro flame!
+                        psr.sharedMaterial = nitroMat;
+                    }
+                }
+            }
 
             // NO-FALL FIX: Player Protect solid shield starting 0.24m above road
             Transform playerProtect = root.transform.Find("Player Protect");
@@ -199,20 +225,20 @@ public class SetupBatmobileMod
                 }
             }
 
-            // 6. Indestructibility, 75% Acceleration (60,000 Torque), Extreme 5000 Speed, and Balanced Braking Drag
+            // 6. Indestructibility, Unrestricted Acceleration, Extreme 5000 Speed, and Zero Jump Drag
             CarControl cc = root.GetComponent<CarControl>();
             if (cc != null)
             {
                 cc.topSpeed = 5000f;
                 cc.reverseSpeed = 5000f;
-                cc.maxTorque = 60000f; // 75% acceleration
+                cc.maxTorque = 120000f; // High torque so acceleration pulls effortlessly past 150 and 250!
             }
 
             Rigidbody carRb = root.GetComponent<Rigidbody>();
             if (carRb != null)
             {
-                carRb.drag = 0.35f; // Balanced braking drag to balance 5000 speed
-                carRb.angularDrag = 2.0f;
+                carRb.drag = 0.005f; // Zero air drag so speed never drops during jumps or at high speeds!
+                carRb.angularDrag = 1.0f;
             }
 
             ExplosionVehicle ev = root.GetComponent<ExplosionVehicle>();
