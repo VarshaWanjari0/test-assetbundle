@@ -124,7 +124,7 @@ public class SetupBatmobileMod
             if (interior != null) interior.localPosition = cockpitSitPos;
 
             Transform interiorCam = root.transform.Find("Interior/InteriorCam");
-            if (interiorCam != null) interiorCam.localPosition = new Vector3(0.0f, -0.20f, 0.20f);
+            if (interiorCam != null) interiorCam.localPosition = new Vector3(0.0f, 0.40f, 0.20f); // 0.60m up to driver eye level
 
             // Door Interaction Point & 2.5x Larger Trigger Area
             Transform doorPos = root.transform.Find("DoorPos");
@@ -139,7 +139,11 @@ public class SetupBatmobileMod
             if (cam != null) cam.localPosition = new Vector3(0.0f, 1.60f, 0.0f);
 
             RidingCar rc = root.GetComponent<RidingCar>();
-            if (rc != null) rc.CamDis = 14;
+            if (rc != null)
+            {
+                rc.CamDis = 14;
+                rc.frontGlass = null;
+            }
 
             Transform steerDummy = root.transform.Find("steering_dummy");
             if (steerDummy != null)
@@ -225,18 +229,19 @@ public class SetupBatmobileMod
                 }
             }
 
-            // 6. Indestructibility, Unrestricted Acceleration, Extreme 5000 Speed, and Zero Jump Drag
+            // 6. Indestructibility, 50% Tuned Acceleration (60k torque), Increased 8000 Mass, and Crash-Ejection Removal
             CarControl cc = root.GetComponent<CarControl>();
             if (cc != null)
             {
                 cc.topSpeed = 5000f;
                 cc.reverseSpeed = 5000f;
-                cc.maxTorque = 120000f; // High torque so acceleration pulls effortlessly past 150 and 250!
+                cc.maxTorque = 60000f; // 50% acceleration (down from 120000f) for smooth heavy power
             }
 
             Rigidbody carRb = root.GetComponent<Rigidbody>();
             if (carRb != null)
             {
+                carRb.mass = 8000f; // Increased car weight (8000 kg heavy armored Batmobile feel)
                 carRb.drag = 0.005f; // Zero air drag so speed never drops during jumps or at high speeds!
                 carRb.angularDrag = 1.0f;
             }
@@ -248,10 +253,28 @@ public class SetupBatmobileMod
                 ev.enabled = false;
             }
 
+            // Remove crash character ejection feature: disable CarImpactCheck and protect doors
             CarImpactCheck cic = root.GetComponent<CarImpactCheck>();
             if (cic != null)
             {
                 cic.damage = false;
+                cic.enabled = false; // Disable component so OnCollisionEnter crash ejection never fires!
+                cic._colDist = 999999f;
+                cic.glassImpact = null;
+                cic.bodyImpactBig = null;
+                cic.bodyImpactSmall = null;
+                cic.sparkImpact = null;
+                cic.crashSound = null;
+                cic.smallCrash = new AudioClip[0];
+                cic.mediumCrash = new AudioClip[0];
+                cic.largeCrash = new AudioClip[0];
+            }
+
+            CarJointControl[] cjcs = root.GetComponentsInChildren<CarJointControl>(true);
+            foreach (var cjc in cjcs)
+            {
+                cjc.DropThisDoor = false; // Keep doors permanently attached on high-speed crash
+                cjc.health = 999999999;
             }
 
             // 7. Tag all assets into AssetBundle 'rgs'
