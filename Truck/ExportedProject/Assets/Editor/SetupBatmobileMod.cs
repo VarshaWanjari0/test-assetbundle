@@ -106,7 +106,7 @@ public class SetupBatmobileMod
             }
 
             // 4. Cockpit Seating (Centered in Batmobile cabin, lowered 0.60m down inside cockpit)
-            Vector3 cockpitSitPos = new Vector3(0.0f, -0.05f, -1.80f); // Tucked safely inside cockpit above road floor
+            Vector3 cockpitSitPos = new Vector3(0.0f, -0.80f, -1.80f); // Lowered sitpos kept exactly as user prefers
             Transform sitPos = root.transform.Find("SitPosL");
             if (sitPos != null)
             {
@@ -200,7 +200,7 @@ public class SetupBatmobileMod
             }
 
             Transform triggerKill = root.transform.Find("TriggerKill");
-            if (triggerKill != null) triggerKill.localPosition = new Vector3(0.0f, 0.70f, 5.80f);
+            if (triggerKill != null) triggerKill.gameObject.SetActive(false); // Completely disabled so it never triggers on bumps
 
             // 5. Root Colliders (Proven single solid chassis box + 2.5x larger sit button)
             BoxCollider[] colliders = root.GetComponents<BoxCollider>();
@@ -217,9 +217,9 @@ public class SetupBatmobileMod
                 {
                     if (nonTriggerCount == 0)
                     {
-                        // High ground clearance (bottom at Y = 0.55m) so 300-400 speed bumps never strike chassis
-                        col.center = new Vector3(0.0f, 1.35f, 0.0f);
-                        col.size = new Vector3(3.60f, 1.60f, 11.50f);
+                        // High ground clearance (bottom at Y = 0.70m) so 300-400 speed bumps never strike chassis
+                        col.center = new Vector3(0.0f, 1.40f, 0.0f);
+                        col.size = new Vector3(3.60f, 1.40f, 11.50f);
                         nonTriggerCount++;
                     }
                     else
@@ -307,8 +307,8 @@ public class SetupBatmobileMod
             {
                 wc.radius = radius;
                 var spring = wc.suspensionSpring;
-                spring.spring = 50000f; // Stiffer spring prevents bottoming out on bumps at 300-400 km/h
-                spring.damper = 6000f;
+                spring.spring = 65000f; // Heavy-duty anti-bottoming suspension for 300-400 km/h bumps
+                spring.damper = 8500f;
                 wc.suspensionSpring = spring;
             }
         }
