@@ -106,7 +106,7 @@ public class SetupBatmobileMod
             }
 
             // 4. Cockpit Seating (Centered in Batmobile cabin, lowered 0.60m down inside cockpit)
-            Vector3 cockpitSitPos = new Vector3(0.0f, -0.80f, -1.80f);
+            Vector3 cockpitSitPos = new Vector3(0.0f, -0.05f, -1.80f); // Tucked safely inside cockpit above road floor
             Transform sitPos = root.transform.Find("SitPosL");
             if (sitPos != null)
             {
@@ -217,9 +217,9 @@ public class SetupBatmobileMod
                 {
                     if (nonTriggerCount == 0)
                     {
-                        // Clean solid chassis box that NEVER knocked down the player
-                        col.center = new Vector3(0.0f, 1.20f, 0.0f);
-                        col.size = new Vector3(3.60f, 1.80f, 11.50f);
+                        // High ground clearance (bottom at Y = 0.55m) so 300-400 speed bumps never strike chassis
+                        col.center = new Vector3(0.0f, 1.35f, 0.0f);
+                        col.size = new Vector3(3.60f, 1.60f, 11.50f);
                         nonTriggerCount++;
                     }
                     else
@@ -241,7 +241,7 @@ public class SetupBatmobileMod
             Rigidbody carRb = root.GetComponent<Rigidbody>();
             if (carRb != null)
             {
-                carRb.mass = 8000f; // Increased car weight (8000 kg heavy armored Batmobile feel)
+                carRb.mass = 4000f; // Mass kept at 4000 as requested
                 carRb.drag = 0.005f; // Zero air drag so speed never drops during jumps or at high speeds!
                 carRb.angularDrag = 1.0f;
             }
@@ -303,7 +303,14 @@ public class SetupBatmobileMod
         {
             col.localPosition = pos;
             WheelCollider wc = col.GetComponent<WheelCollider>();
-            if (wc != null) wc.radius = radius;
+            if (wc != null)
+            {
+                wc.radius = radius;
+                var spring = wc.suspensionSpring;
+                spring.spring = 50000f; // Stiffer spring prevents bottoming out on bumps at 300-400 km/h
+                spring.damper = 6000f;
+                wc.suspensionSpring = spring;
+            }
         }
 
         Transform m = root.transform.Find(modelPath);
