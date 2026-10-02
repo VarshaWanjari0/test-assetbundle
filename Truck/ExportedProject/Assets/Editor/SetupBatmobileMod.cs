@@ -79,12 +79,13 @@ public class SetupBatmobileMod
                 }
             }
 
-            // 2. Setup 4 Wheels with calibrated positions (identical to 5c75921)
-            float wheelRadius = 0.66f;
-            Vector3 posFL = new Vector3(-2.00f, 0.74f,  3.58f);
-            Vector3 posFR = new Vector3( 2.00f, 0.74f,  3.58f);
-            Vector3 posRL = new Vector3(-2.38f, 0.74f, -2.96f);
-            Vector3 posRR = new Vector3( 2.38f, 0.74f, -2.96f);
+            // 2. Setup 4 Wheels with elevated ride height (lifts car up to glide over bumps)
+            float wheelRadius = 0.72f; // Increased wheel radius gives extra ground clearance
+            float wheelY = 0.38f; // Lowered wheel mount relative to chassis = lifts car up ~0.40m higher off ground!
+            Vector3 posFL = new Vector3(-2.00f, wheelY,  3.58f);
+            Vector3 posFR = new Vector3( 2.00f, wheelY,  3.58f);
+            Vector3 posRL = new Vector3(-2.38f, wheelY, -2.96f);
+            Vector3 posRR = new Vector3( 2.38f, wheelY, -2.96f);
 
             SetupWheel(root, "Wheel collider/Col FL", "Wheel Model/FL", "wheel_FL", posFL, wheelRadius, "Assets/Models/wheel_FL.obj");
             SetupWheel(root, "Wheel collider/Col FR", "Wheel Model/FR", "wheel_FL", posFR, wheelRadius, "Assets/Models/wheel_FR.obj");
@@ -306,9 +307,11 @@ public class SetupBatmobileMod
             if (wc != null)
             {
                 wc.radius = radius;
+                wc.suspensionDistance = 0.35f;
                 var spring = wc.suspensionSpring;
-                spring.spring = 65000f; // Heavy-duty anti-bottoming suspension for 300-400 km/h bumps
-                spring.damper = 8500f;
+                spring.spring = 55000f; // Firm responsive suspension
+                spring.damper = 7500f;
+                spring.targetPosition = 0.30f; // Rides higher on suspension stroke (elevates car more)
                 wc.suspensionSpring = spring;
             }
         }
