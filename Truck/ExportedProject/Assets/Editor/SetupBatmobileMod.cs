@@ -105,8 +105,8 @@ public class SetupBatmobileMod
                 if (mr != null) mr.enabled = false;
             }
 
-            // 4. Cockpit Seating (Centered in Batmobile cabin, lowered so head is tucked safely inside)
-            Vector3 cockpitSitPos = new Vector3(0.0f, 0.20f, -1.80f);
+            // 4. Cockpit Seating (Centered in Batmobile cabin, lowered down inside cockpit)
+            Vector3 cockpitSitPos = new Vector3(0.0f, -0.20f, -1.80f);
             Transform sitPos = root.transform.Find("SitPosL");
             if (sitPos != null)
             {
@@ -124,7 +124,7 @@ public class SetupBatmobileMod
             if (interior != null) interior.localPosition = cockpitSitPos;
 
             Transform interiorCam = root.transform.Find("Interior/InteriorCam");
-            if (interiorCam != null) interiorCam.localPosition = new Vector3(0.0f, 0.70f, 0.20f);
+            if (interiorCam != null) interiorCam.localPosition = new Vector3(0.0f, 0.30f, 0.20f);
 
             // Door Interaction Point & 2.5x Larger Trigger Area
             Transform doorPos = root.transform.Find("DoorPos");
@@ -286,18 +286,18 @@ public class SetupBatmobileMod
                         if (tireMat != null)
                         {
                             tireMat.DisableKeyword("_EMISSION");
-                            tireMat.SetColor("_Color", new Color(0.12f, 0.12f, 0.12f, 1f));
+                            tireMat.SetColor("_Color", new Color(0.35f, 0.35f, 0.38f, 1f)); // Distinct lighter slate grey tire rubber
                             tireMat.SetColor("_EmissionColor", Color.black);
-                            tireMat.SetFloat("_Metallic", 0.05f);
-                            tireMat.SetFloat("_Glossiness", 0.25f);
+                            tireMat.SetFloat("_Metallic", 0.08f);
+                            tireMat.SetFloat("_Glossiness", 0.30f);
                         }
                         if (rimMat != null)
                         {
                             rimMat.DisableKeyword("_EMISSION");
-                            rimMat.SetColor("_Color", new Color(0.92f, 0.92f, 0.94f, 1f));
+                            rimMat.SetColor("_Color", new Color(0.98f, 0.98f, 1.0f, 1f)); // Bright brilliant light alloy rims
                             rimMat.SetColor("_EmissionColor", Color.black);
-                            rimMat.SetFloat("_Metallic", 0.92f);
-                            rimMat.SetFloat("_Glossiness", 0.85f);
+                            rimMat.SetFloat("_Metallic", 0.96f);
+                            rimMat.SetFloat("_Glossiness", 0.92f);
                         }
                         if (tireMat != null && rimMat != null)
                         {
