@@ -26,7 +26,7 @@ public class BuildAssetBundles
             }
         }
 
-        Debug.Log("[BuildAssetBundles] Collecting all city assets for target: " + target);
+        Debug.Log("[BuildAssetBundles] Collecting assets for target: " + target);
         List<string> assetPaths = new List<string>();
         foreach (string f in Directory.GetFiles("Assets", "*.*", SearchOption.AllDirectories))
         {
@@ -36,10 +36,10 @@ public class BuildAssetBundles
         }
 
         AssetBundleBuild[] buildMap = new AssetBundleBuild[1];
-        buildMap[0].assetBundleName = "oldcity";
+        buildMap[0].assetBundleName = "cm7";
         buildMap[0].assetNames = assetPaths.ToArray();
 
-        Debug.Log("[BuildAssetBundles] Building 'oldcity' bundle with " + assetPaths.Count + " assets (LZMA compressed)...");
+        Debug.Log("[BuildAssetBundles] Building 'cm7' bundle with " + assetPaths.Count + " assets (LZMA compressed)...");
         AssetBundleManifest manifest = BuildPipeline.BuildAssetBundles(
             assetBundleDirectory,
             buildMap,
