@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        project: [cm7]
+        project: [OldCity]
 
     steps:
       - name: Free Disk Space & Optimize Docker
