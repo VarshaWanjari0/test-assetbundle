@@ -105,7 +105,7 @@ public class SetupOldCity
         GameObject modelInstance = UnityEngine.Object.Instantiate(modelPrefab);
         modelInstance.name = "CityMesh";
         modelInstance.transform.SetParent(oldmapGO.transform, false);
-        modelInstance.transform.localPosition = Vector3.zero;
+        modelInstance.transform.localPosition = new Vector3(0f, 0f, -150f);
         modelInstance.transform.localRotation = Quaternion.identity;
         modelInstance.transform.localScale = Vector3.one;
 
@@ -156,7 +156,7 @@ public class SetupOldCity
         GameObject rgsModelInstance = UnityEngine.Object.Instantiate(modelInstance);
         rgsModelInstance.name = "CityMesh";
         rgsModelInstance.transform.SetParent(rgsOldmapGO.transform, false);
-        rgsModelInstance.transform.localPosition = Vector3.zero;
+        rgsModelInstance.transform.localPosition = new Vector3(0f, 0f, -150f);
         rgsModelInstance.transform.localRotation = Quaternion.identity;
         rgsModelInstance.transform.localScale = Vector3.one;
 
