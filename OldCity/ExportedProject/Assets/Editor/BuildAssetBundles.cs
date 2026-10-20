@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using System.Reflection;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -26,13 +26,23 @@ public class BuildAssetBundles
             }
         }
 
-        // Invoke project-specific setup via Reflection so missing classes never cause compile errors
-        InvokeSetupMethod("SetupBuildingProp");
-        InvokeSetupMethod("SetupBatmobileMod");
+        Debug.Log("[BuildAssetBundles] Collecting all city assets for target: " + target);
+        List<string> assetPaths = new List<string>();
+        foreach (string f in Directory.GetFiles("Assets", "*.*", SearchOption.AllDirectories))
+        {
+            string norm = f.Replace('\\', '/');
+            if (norm.EndsWith(".meta") || norm.EndsWith(".cs") || norm.Contains("AssetBundles/")) continue;
+            assetPaths.Add(norm);
+        }
 
-        Debug.Log("[BuildAssetBundles] Building AssetBundles for target: " + target);
+        AssetBundleBuild[] buildMap = new AssetBundleBuild[1];
+        buildMap[0].assetBundleName = "oldcity";
+        buildMap[0].assetNames = assetPaths.ToArray();
+
+        Debug.Log("[BuildAssetBundles] Building 'oldcity' bundle with " + assetPaths.Count + " assets (LZMA compressed)...");
         AssetBundleManifest manifest = BuildPipeline.BuildAssetBundles(
             assetBundleDirectory,
+            buildMap,
             BuildAssetBundleOptions.None,
             target
         );
@@ -42,37 +52,9 @@ public class BuildAssetBundles
         Debug.Log("[BuildAssetBundles] Successfully generated bundles:");
         foreach (string b in manifest.GetAllAssetBundles())
         {
-            Debug.Log("  - " + b);
-        }
-    }
-
-    private static void InvokeSetupMethod(string typeName)
-    {
-        try
-        {
-            Type t = Type.GetType(typeName);
-            if (t == null)
-            {
-                foreach (Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
-                {
-                    t = asm.GetType(typeName);
-                    if (t != null) break;
-                }
-            }
-
-            if (t != null)
-            {
-                MethodInfo m = t.GetMethod("Build", BindingFlags.Public | BindingFlags.Static);
-                if (m != null)
-                {
-                    Debug.Log("[BuildAssetBundles] Executing " + typeName + ".Build()...");
-                    m.Invoke(null, null);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Debug.LogError("[BuildAssetBundles] Error executing " + typeName + ": " + ex);
+            string bPath = Path.Combine(assetBundleDirectory, b);
+            long bSize = File.Exists(bPath) ? new FileInfo(bPath).Length : 0;
+            Debug.Log("  - " + b + " (" + (bSize / 1024.0) + " KB)");
         }
     }
 }
