@@ -28,22 +28,15 @@ jobs:
     steps:
       - name: Free Disk Space & Optimize Docker
         run: |
-          echo "Disk space before cleanup:"
           df -h /
-
-          # Parallel fast cleanup of largest bloated directories
           sudo rm -rf "$AGENT_TOOLSDIRECTORY" &
           sudo rm -rf /usr/local/lib/android &
           sudo rm -rf /usr/share/dotnet &
           sudo rm -rf /opt/ghc &
-
-          # Maximize concurrent layer downloads for Docker
           sudo mkdir -p /etc/docker
           echo '{"max-concurrent-downloads": 10}' | sudo tee /etc/docker/daemon.json > /dev/null
           sudo systemctl restart docker &
-
           wait
-          echo "Disk space after cleanup:"
           df -h /
 
       - name: Checkout Repository
@@ -60,7 +53,7 @@ jobs:
           echo "Selected Target Platform: $TARGET"
           echo "TARGET_PLATFORM=$TARGET" >> "$GITHUB_ENV"
 
-      - name: Prepare Map and Inject Build Script
+      - name: Prepare Map Assets
         run: |
           mkdir -p ${{ matrix.project }}/ExportedProject/Assets/Editor
           cp ci/BuildAssetBundles.cs ${{ matrix.project }}/ExportedProject/Assets/Editor/BuildAssetBundles.cs

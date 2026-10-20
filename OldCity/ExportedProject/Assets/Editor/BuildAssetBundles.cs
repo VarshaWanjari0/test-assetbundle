@@ -27,27 +27,24 @@ public class BuildAssetBundles
             }
         }
 
-        // Run dynamic setup methods
-        InvokeSetupMethod("SetupOldCity");
+        // Run SetupOldCity
+        SetupOldCity.Build();
 
-        Debug.Log("[BuildAssetBundles] Collecting all assets for 'cm7' bundle...");
-        List<string> assetPaths = new List<string>();
-        foreach (string f in Directory.GetFiles("Assets", "*.*", SearchOption.AllDirectories))
+        List<string> assetPaths = new List<string>
         {
-            string norm = f.Replace('\\', '/');
-            if (norm.EndsWith(".meta") || norm.EndsWith(".cs") || norm.Contains("AssetBundles/") || norm.EndsWith(".zip")) continue;
-            assetPaths.Add(norm);
-        }
+            "Assets/test/megacity/cm7.prefab",
+            "Assets/outsidemods/prefab/rgs.prefab"
+        };
 
         AssetBundleBuild[] buildMap = new AssetBundleBuild[1];
         buildMap[0].assetBundleName = "cm7";
         buildMap[0].assetNames = assetPaths.ToArray();
 
-        Debug.Log("[BuildAssetBundles] Building 'cm7' AssetBundle with " + assetPaths.Count + " assets (target: " + target + ")...");
+        Debug.Log("[BuildAssetBundles] Building 'cm7' AssetBundle (target: " + target + ")...");
         AssetBundleManifest manifest = BuildPipeline.BuildAssetBundles(
             assetBundleDirectory,
             buildMap,
-            BuildAssetBundleOptions.None,
+            BuildAssetBundleOptions.ChunkBasedCompression,
             target
         );
 
@@ -58,37 +55,7 @@ public class BuildAssetBundles
         {
             string bPath = Path.Combine(assetBundleDirectory, b);
             long bSize = File.Exists(bPath) ? new FileInfo(bPath).Length : 0;
-            Debug.Log("  - " + b + " (" + (bSize / 1024.0) + " KB)");
-        }
-    }
-
-    private static void InvokeSetupMethod(string typeName)
-    {
-        try
-        {
-            Type t = Type.GetType(typeName);
-            if (t == null)
-            {
-                foreach (Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
-                {
-                    t = asm.GetType(typeName);
-                    if (t != null) break;
-                }
-            }
-
-            if (t != null)
-            {
-                MethodInfo m = t.GetMethod("Build", BindingFlags.Public | BindingFlags.Static);
-                if (m != null)
-                {
-                    Debug.Log("[BuildAssetBundles] Executing " + typeName + ".Build()...");
-                    m.Invoke(null, null);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Debug.LogError("[BuildAssetBundles] Error executing " + typeName + ": " + ex);
+            Debug.Log("  - " + b + " (" + (bSize / (1024.0 * 1024.0)).ToString("F2") + " MB)");
         }
     }
 }
