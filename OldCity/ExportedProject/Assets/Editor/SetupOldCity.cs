@@ -82,16 +82,16 @@ public class SetupOldCity
         }
 
         // 7. Assemble cm7.prefab
-        // Hierarchy matching cm7file:
-        // cm7 (pos 0,0,0)
-        //   -> oldmap (with currenthuman component)
-        //        -> submesh parts (each with MeshFilter, MeshRenderer, MeshCollider convex=false)
+        // Hierarchy matching original cm7file:
+        // cm7 (pos: -269, 37.45, -1723.3, rot: Euler(0, 75.1, 0))
+        //   -> "Old Map" (with currenthuman component)
+        //        -> CityMesh (with all submesh parts: MeshFilter, MeshRenderer, MeshCollider convex=false)
         GameObject cm7GO = new GameObject("cm7");
-        cm7GO.transform.position = Vector3.zero;
-        cm7GO.transform.rotation = Quaternion.identity;
+        cm7GO.transform.position = new Vector3(-269f, 37.45f, -1723.3f);
+        cm7GO.transform.rotation = new Quaternion(0f, -0.6094535f, 0f, 0.79282176f);
         cm7GO.transform.localScale = Vector3.one;
 
-        GameObject oldmapGO = new GameObject("oldmap");
+        GameObject oldmapGO = new GameObject("Old Map");
         oldmapGO.transform.SetParent(cm7GO.transform, false);
         oldmapGO.transform.localPosition = Vector3.zero;
         oldmapGO.transform.localRotation = Quaternion.identity;
@@ -101,39 +101,33 @@ public class SetupOldCity
         ch.img = iconSprite;
         ch.humans = 0;
 
-        // Instantiate model prefab and reparent all subparts under oldmap
+        // Instantiate model prefab under Old Map
         GameObject modelInstance = UnityEngine.Object.Instantiate(modelPrefab);
-        List<Transform> children = new List<Transform>();
-        foreach (Transform t in modelInstance.transform)
-        {
-            children.Add(t);
-        }
-        // If model has no children, modelInstance itself has the mesh
-        if (children.Count == 0)
-        {
-            children.Add(modelInstance.transform);
-        }
+        modelInstance.name = "CityMesh";
+        modelInstance.transform.SetParent(oldmapGO.transform, false);
+        modelInstance.transform.localPosition = Vector3.zero;
+        modelInstance.transform.localRotation = Quaternion.identity;
+        modelInstance.transform.localScale = Vector3.one;
 
-        foreach (Transform part in children)
+        // Attach MeshCollider and Material to EVERY child submesh part
+        MeshFilter[] mfs = modelInstance.GetComponentsInChildren<MeshFilter>(true);
+        Debug.Log("[SetupOldCity] Found " + mfs.Length + " mesh parts in model.");
+        foreach (MeshFilter mf in mfs)
         {
-            part.SetParent(oldmapGO.transform, false);
-
-            MeshFilter mf = part.GetComponent<MeshFilter>();
-            if (mf != null && mf.sharedMesh != null)
+            if (mf.sharedMesh != null)
             {
-                MeshCollider mc = part.gameObject.GetComponent<MeshCollider>();
-                if (mc == null) mc = part.gameObject.AddComponent<MeshCollider>();
+                MeshCollider mc = mf.gameObject.GetComponent<MeshCollider>();
+                if (mc == null) mc = mf.gameObject.AddComponent<MeshCollider>();
                 mc.sharedMesh = mf.sharedMesh;
                 mc.convex = false;
             }
 
-            MeshRenderer mr = part.GetComponent<MeshRenderer>();
+            MeshRenderer mr = mf.gameObject.GetComponent<MeshRenderer>();
             if (mr != null)
             {
                 mr.sharedMaterial = mat;
             }
         }
-        UnityEngine.Object.DestroyImmediate(modelInstance);
 
         // Save cm7.prefab
         string cm7PrefabPath = "Assets/test/megacity/cm7.prefab";
@@ -143,23 +137,28 @@ public class SetupOldCity
 
         // 8. Assemble rgs.prefab for compatibility
         GameObject rgsGO = new GameObject("rgs");
-        rgsGO.transform.position = Vector3.zero;
+        rgsGO.transform.position = new Vector3(-269f, 37.45f, -1723.3f);
+        rgsGO.transform.rotation = new Quaternion(0f, -0.6094535f, 0f, 0.79282176f);
+        rgsGO.transform.localScale = Vector3.one;
         ModMe mm = rgsGO.AddComponent<ModMe>();
         mm.Scale = true;
 
-        GameObject rgsOldmapGO = new GameObject("oldmap");
+        GameObject rgsOldmapGO = new GameObject("Old Map");
         rgsOldmapGO.transform.SetParent(rgsGO.transform, false);
+        rgsOldmapGO.transform.localPosition = Vector3.zero;
+        rgsOldmapGO.transform.localRotation = Quaternion.identity;
+        rgsOldmapGO.transform.localScale = Vector3.one;
+
         currenthuman ch2 = rgsOldmapGO.AddComponent<currenthuman>();
         ch2.img = iconSprite;
         ch2.humans = 0;
 
-        // Clone oldmap parts to rgsOldmapGO
-        foreach (Transform part in oldmapGO.transform)
-        {
-            GameObject clonePart = UnityEngine.Object.Instantiate(part.gameObject);
-            clonePart.name = part.name;
-            clonePart.transform.SetParent(rgsOldmapGO.transform, false);
-        }
+        GameObject rgsModelInstance = UnityEngine.Object.Instantiate(modelInstance);
+        rgsModelInstance.name = "CityMesh";
+        rgsModelInstance.transform.SetParent(rgsOldmapGO.transform, false);
+        rgsModelInstance.transform.localPosition = Vector3.zero;
+        rgsModelInstance.transform.localRotation = Quaternion.identity;
+        rgsModelInstance.transform.localScale = Vector3.one;
 
         string rgsPrefabPath = "Assets/outsidemods/prefab/rgs.prefab";
         Directory.CreateDirectory("Assets/outsidemods/prefab");
