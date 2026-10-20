@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d
+timeCreated: 1792484000
+licenseType: Free
+TextureImporter:
+  serializedVersion: 12
+  mipmaps:
+    enableMipMap: 0
+    sRGBTexture: 1
+  isReadable: 1
+  spriteMode: 1
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  textureType: 8
+  textureShape: 1

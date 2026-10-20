@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d
+timeCreated: 1792484000
+licenseType: Free
+ModelImporter:
+  serializedVersion: 22200
+  materials:
+    materialImportMode: 2
+    materialLocation: 1
+  meshes:
+    globalScale: 1
+    useFileUnits: 1
+    indexFormat: 1
+    weldVertices: 0
+  importNormals: 1
+  importTangents: 1
+  normalCalculationMode: 4
