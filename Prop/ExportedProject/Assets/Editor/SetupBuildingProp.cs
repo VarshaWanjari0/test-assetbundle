@@ -4,17 +4,35 @@ using System.IO;
 
 public class SetupBuildingProp
 {
-    const float S = 2.75f; // 2.5x-3x scale as requested
-
-    [MenuItem("Tools/Build Building Prop")]
+    [MenuItem("Tools/Build Firecracker Prop")]
     public static void Build()
     {
+        string fbxPath = "Assets/Models/firecracker_skyshots_10x.fbx";
+        string wavPath = "Assets/Audio/firecracker_skyshots_10x.wav";
         string prefabPath = "Assets/outsidemods/prefab/rgs.prefab";
         string prefabDir = Path.GetDirectoryName(prefabPath);
         if (!Directory.Exists(prefabDir)) Directory.CreateDirectory(prefabDir);
 
-        // 1. Root GameObject on Layer 0 (Default Environment/Ground Layer)
-        // Layer 0 ensures player ground-check raycast detects all floors as solid ground
+        // 1. Configure ModelImporter for loop animation
+        ModelImporter importer = AssetImporter.GetAtPath(fbxPath) as ModelImporter;
+        if (importer != null)
+        {
+            importer.animationType = ModelImporterAnimationType.Generic;
+            ModelImporterClipAnimation[] clips = importer.defaultClipAnimations;
+            if (clips == null || clips.Length == 0)
+            {
+                clips = new ModelImporterClipAnimation[] { new ModelImporterClipAnimation() { name = "Firecracker_10_Skyshots", firstFrame = 0, lastFrame = 1260 } };
+            }
+            foreach (var clip in clips)
+            {
+                clip.loopTime = true;
+                clip.wrapMode = WrapMode.Loop;
+            }
+            importer.clipAnimations = clips;
+            importer.SaveAndReimport();
+        }
+
+        // 2. Create Root 'rgs' GameObject on Layer 0 (Default)
         GameObject root = new GameObject("rgs");
         root.layer = 0;
 
@@ -22,55 +40,110 @@ public class SetupBuildingProp
         ModMe mm = root.AddComponent<ModMe>();
         mm.Scale = true;
 
-        // 2. Load and Instantiate Building Model
-        GameObject buildingAsset = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Models/building.obj");
-        if (buildingAsset != null)
-        {
-            GameObject buildingInst = Object.Instantiate(buildingAsset, root.transform);
-            buildingInst.name = "Building";
-            buildingInst.transform.localPosition = Vector3.zero;
-            buildingInst.transform.localRotation = Quaternion.Euler(0f, 180f, 0f); // Rotated 180 degrees in Y
-            buildingInst.transform.localScale = Vector3.one * S; // 2.75x scale
+        // Base ground BoxCollider
+        BoxCollider bc = root.AddComponent<BoxCollider>();
+        bc.center = new Vector3(0f, 0.5f, 0f);
+        bc.size = new Vector3(2.5f, 1.0f, 2.5f);
 
-            // Assign Layer 0 and attach 1:1 non-convex MeshCollider to each mesh part
-            Transform[] allChildren = buildingInst.GetComponentsInChildren<Transform>(true);
+        // 3. Load and Instantiate FBX Model
+        GameObject modelAsset = AssetDatabase.LoadAssetAtPath<GameObject>(fbxPath);
+        if (modelAsset != null)
+        {
+            GameObject modelInst = Object.Instantiate(modelAsset, root.transform);
+            modelInst.name = "Firecracker_Battery";
+            modelInst.transform.localPosition = Vector3.zero;
+            modelInst.transform.localRotation = Quaternion.identity;
+            modelInst.transform.localScale = Vector3.one;
+
+            // Set Layer 0 across all children
+            Transform[] allChildren = modelInst.GetComponentsInChildren<Transform>(true);
             foreach (Transform t in allChildren)
             {
-                t.gameObject.layer = 0; // Layer 0 for solid ground detection
-                MeshFilter mf = t.GetComponent<MeshFilter>();
-                if (mf != null && mf.sharedMesh != null)
+                t.gameObject.layer = 0;
+            }
+
+            // 4. Attach Dynamic Real-Time Point Lights to Flash/Blast Nodes
+            Color[] blastColors = new Color[] {
+                new Color(1f, 0.84f, 0.0f),   // Gold Imperial
+                new Color(1f, 0.6f, 0.1f),    // Amber Kamuro
+                new Color(0.9f, 0.95f, 1f),   // White Flash
+                new Color(0.0f, 0.9f, 1.0f),  // Cyan Electric
+                new Color(1.0f, 0.1f, 0.6f),  // Magenta Hot
+                new Color(0.2f, 1.0f, 0.3f),  // Green
+                new Color(1.0f, 0.2f, 0.2f),  // Red
+                new Color(0.6f, 0.2f, 1.0f),  // Violet
+                new Color(1.0f, 0.9f, 0.3f),  // Yellow Strobe
+                new Color(1.0f, 0.4f, 0.8f)   // Multi Neon
+            };
+
+            for (int i = 1; i <= 10; i++)
+            {
+                string targetName = string.Format("S{0:D2}_CoreFlash", i);
+                Transform flashTr = FindChildRecursive(modelInst.transform, targetName);
+                if (flashTr != null)
                 {
-                    MeshCollider mc = t.gameObject.AddComponent<MeshCollider>();
-                    mc.sharedMesh = mf.sharedMesh;
-                    mc.convex = false; // 1:1 EXACT NON-CONVEX COLLIDER
+                    GameObject lightGo = new GameObject("BlastLight_" + i);
+                    lightGo.transform.SetParent(flashTr, false);
+                    Light l = lightGo.AddComponent<Light>();
+                    l.type = LightType.Point;
+                    l.range = 100f; // Illuminates surrounding world, buildings and player
+                    l.intensity = 6f;
+                    l.color = blastColors[(i - 1) % blastColors.Length];
                 }
             }
+
+            // Ensure Animator is present and enabled
+            Animator animator = modelInst.GetComponent<Animator>();
+            if (animator == null) animator = modelInst.AddComponent<Animator>();
+            animator.applyRootMotion = false;
         }
         else
         {
-            Debug.LogError("Failed to load Assets/Models/building.obj!");
+            Debug.LogError("Failed to load FBX model: " + fbxPath);
         }
 
-        // 3. Tag all assets into 'rgs' AssetBundle
-        AssetImporter prefabImp = AssetImporter.GetAtPath(prefabPath);
-        if (prefabImp != null) prefabImp.assetBundleName = "rgs";
-
-        string[] modelFiles = Directory.GetFiles("Assets/Models", "*.*", SearchOption.AllDirectories);
-        foreach (string file in modelFiles)
+        // 5. Attach AudioSource with Synced 42-second WAV Audio
+        AudioClip audioClip = AssetDatabase.LoadAssetAtPath<AudioClip>(wavPath);
+        if (audioClip != null)
         {
-            if (file.EndsWith(".meta")) continue;
-            string unityPath = file.Replace('\\', '/');
-            AssetImporter imp = AssetImporter.GetAtPath(unityPath);
-            if (imp != null) imp.assetBundleName = "rgs";
+            AudioSource audio = root.AddComponent<AudioSource>();
+            audio.clip = audioClip;
+            audio.loop = true;          // Infinite loop
+            audio.playOnAwake = true;   // Plays immediately when spawned
+            audio.spatialBlend = 1.0f;  // 3D Spatial Audio
+            audio.minDistance = 10f;
+            audio.maxDistance = 500f;
+            audio.volume = 1.0f;
+        }
+        else
+        {
+            Debug.LogWarning("Audio clip not found at " + wavPath);
         }
 
-        // 4. Save Prefab
+        // 6. Save Prefab and Tag into 'rgs' AssetBundle
         PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
         Object.DestroyImmediate(root);
 
-        prefabImp = AssetImporter.GetAtPath(prefabPath);
-        if (prefabImp != null) prefabImp.assetBundleName = "rgs";
+        AssetImporter pImp = AssetImporter.GetAtPath(prefabPath);
+        if (pImp != null) pImp.assetBundleName = "rgs";
 
-        Debug.Log("🎉 Successfully configured house_modern prop (Scale: 2.75x, RotY: 180 deg) on Layer 0 with 1:1 MeshColliders and ModMe!");
+        AssetImporter fbxImp = AssetImporter.GetAtPath(fbxPath);
+        if (fbxImp != null) fbxImp.assetBundleName = "rgs";
+
+        AssetImporter wavImp = AssetImporter.GetAtPath(wavPath);
+        if (wavImp != null) wavImp.assetBundleName = "rgs";
+
+        Debug.Log("🎉 Successfully generated Firecracker Skyshots 10x Prefab with Synced Audio and World Blast Glow!");
+    }
+
+    private static Transform FindChildRecursive(Transform parent, string name)
+    {
+        if (parent.name == name) return parent;
+        for (int i = 0; i < parent.childCount; i++)
+        {
+            Transform result = FindChildRecursive(parent.GetChild(i), name);
+            if (result != null) return result;
+        }
+        return null;
     }
 }

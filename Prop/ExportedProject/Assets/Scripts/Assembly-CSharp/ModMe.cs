@@ -1,6 +1,12 @@
 using UnityEngine;
+using System;
+using System.Collections;
+using System.Collections.Generic;
 
-public class ModMe : MonoBehaviour
+public class ModMe : UnityEngine.MonoBehaviour
 {
-    public bool Scale = true;
+    // Fields
+    public System.Boolean Scale;
+    // Methods
+    public ModMe() { }
 }
