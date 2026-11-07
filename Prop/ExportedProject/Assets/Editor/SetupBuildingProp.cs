@@ -10,7 +10,7 @@ public class SetupBuildingProp
     [MenuItem("Tools/Build Firecracker Prop")]
     public static void Build()
     {
-        string modelPath = "Assets/Models/firecracker_skyshots_10x.fbx";
+        string modelPath = "Assets/Models/firecracker_skyshots_10x.glb";
         string wavPath = "Assets/Audio/firecracker_skyshots_10x.wav";
         string prefabPath = "Assets/outsidemods/prefab/rgs.prefab";
         string controllerPath = "Assets/AnimatorController/Firecracker.controller";
@@ -20,35 +20,17 @@ public class SetupBuildingProp
         if (!Directory.Exists("Assets/AnimatorController")) Directory.CreateDirectory("Assets/AnimatorController");
         if (!Directory.Exists(Path.GetDirectoryName(prefabPath))) Directory.CreateDirectory(Path.GetDirectoryName(prefabPath));
 
-        // 1. Configure ModelImporter
         AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
-        ModelImporter importer = AssetImporter.GetAtPath(modelPath) as ModelImporter;
-        if (importer != null)
-        {
-            importer.animationType = ModelImporterAnimationType.Generic;
-            importer.importAnimation = true;
-            ModelImporterClipAnimation[] clips = importer.defaultClipAnimations;
-            if (clips != null && clips.Length > 0)
-            {
-                foreach (var clip in clips)
-                {
-                    clip.loopTime = true;
-                    clip.wrapMode = WrapMode.Loop;
-                }
-                importer.clipAnimations = clips;
-            }
-            importer.SaveAndReimport();
-        }
 
-        // 2. Load Model Asset
+        // 1. Load GLB Model Asset directly (imported natively via glTFast)
         GameObject modelAsset = AssetDatabase.LoadAssetAtPath<GameObject>(modelPath);
         if (modelAsset == null)
         {
-            throw new System.Exception("FATAL: Failed to load model asset at " + modelPath);
+            throw new System.Exception("FATAL: Failed to load GLB model asset at " + modelPath);
         }
-        Debug.Log("Successfully loaded modelAsset: " + modelAsset.name);
+        Debug.Log("Successfully loaded GLB modelAsset: " + modelAsset.name);
 
-        // 3. Find AnimationClip
+        // 2. Find AnimationClip in GLB sub-assets
         AnimationClip animClip = null;
         Object[] subAssets = AssetDatabase.LoadAllAssetsAtPath(modelPath);
         foreach (Object obj in subAssets)
@@ -56,12 +38,13 @@ public class SetupBuildingProp
             if (obj is AnimationClip && !obj.name.StartsWith("__preview__"))
             {
                 animClip = obj as AnimationClip;
-                Debug.Log("Found AnimationClip in model: " + animClip.name);
+                animClip.wrapMode = WrapMode.Loop;
+                Debug.Log("Found AnimationClip in GLB: " + animClip.name);
                 break;
             }
         }
 
-        // 4. Create Persistent Materials on Disk
+        // 3. Create Persistent Materials on Disk
         Shader targetShader = Shader.Find("Mobile/Diffuse");
         if (targetShader == null) targetShader = Shader.Find("Standard");
 
@@ -104,7 +87,7 @@ public class SetupBuildingProp
         }
         AssetDatabase.SaveAssets();
 
-        // 5. Create AnimatorController with looping state
+        // 4. Create AnimatorController with looping state
         AnimatorController controller = AnimatorController.CreateAnimatorControllerAtPath(controllerPath);
         if (animClip != null)
         {
@@ -114,7 +97,7 @@ public class SetupBuildingProp
             sm.defaultState = loopState;
         }
 
-        // 6. Build Root GameObject on Layer 0
+        // 5. Build Root GameObject on Layer 0
         GameObject root = new GameObject("rgs");
         root.layer = 0;
 
@@ -125,13 +108,12 @@ public class SetupBuildingProp
         bc.center = new Vector3(0f, 0.2f * S, 0f);
         bc.size = new Vector3(0.8f * S, 0.4f * S, 0.8f * S);
 
-        // Put Animator on root like original decompiled rgs.prefab
         Animator rootAnimator = root.AddComponent<Animator>();
         rootAnimator.runtimeAnimatorController = controller;
         rootAnimator.applyRootMotion = false;
         rootAnimator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
 
-        // 7. Instantiate Model into root
+        // 6. Instantiate GLB Model into root
         GameObject modelInst = Object.Instantiate(modelAsset, root.transform);
         modelInst.name = "Firecracker_Battery";
         modelInst.transform.localPosition = Vector3.zero;
@@ -140,7 +122,7 @@ public class SetupBuildingProp
 
         // Assign persistent disk materials and Layer 0
         Renderer[] renderers = modelInst.GetComponentsInChildren<Renderer>(true);
-        Debug.Log("Assigning persistent materials to " + renderers.Length + " renderers");
+        Debug.Log("Assigning persistent materials to " + renderers.Length + " renderers in GLB hierarchy");
         foreach (Renderer r in renderers)
         {
             r.gameObject.layer = 0;
@@ -159,7 +141,7 @@ public class SetupBuildingProp
             r.sharedMaterial = selectedMat;
         }
 
-        // 8. Blast Lights
+        // 7. Blast Lights
         Color[] blastColors = new Color[] {
             new Color(1f, 0.84f, 0.0f), new Color(1f, 0.6f, 0.1f), new Color(0.9f, 0.95f, 1f),
             new Color(0.0f, 0.9f, 1.0f), new Color(1.0f, 0.1f, 0.6f), new Color(0.2f, 1.0f, 0.3f),
@@ -183,7 +165,7 @@ public class SetupBuildingProp
             }
         }
 
-        // 9. Audio
+        // 8. AudioSource
         AudioClip audioClip = AssetDatabase.LoadAssetAtPath<AudioClip>(wavPath);
         if (audioClip != null)
         {
@@ -197,7 +179,7 @@ public class SetupBuildingProp
             audio.volume = 1.0f;
         }
 
-        // 10. Save Prefab & Tag into 'rgs'
+        // 9. Save Prefab & Tag into 'rgs'
         PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
         Object.DestroyImmediate(root);
 
@@ -206,7 +188,7 @@ public class SetupBuildingProp
         AssetImporter.GetAtPath(wavPath).assetBundleName = "rgs";
         AssetImporter.GetAtPath(controllerPath).assetBundleName = "rgs";
 
-        Debug.Log("🎉 Setup complete: Model loaded with persistent disk materials, Animator on root, and tagged into rgs bundle!");
+        Debug.Log("🎉 glTFast Setup complete: Loaded GLB directly with " + renderers.Length + " renderers, Animator on root, and tagged into rgs bundle!");
     }
 
     private static Transform FindChildRecursive(Transform parent, string name)

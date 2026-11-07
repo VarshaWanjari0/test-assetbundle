@@ -60,33 +60,6 @@ jobs:
           echo "Selected Target Platform: $TARGET"
           echo "TARGET_PLATFORM=$TARGET" >> "$GITHUB_ENV"
 
-      - name: Convert GLB to Optimized Unity FBX on Cloud
-        run: |
-          echo "Installing Blender and numpy..."
-          sudo apt-get update -qq && sudo apt-get install -y -qq blender python3-numpy
-          echo "Converting GLB to native Unity binary FBX..."
-          python3 -c "
-          import subprocess
-          script = '''
-          import bpy
-          bpy.ops.wm.read_factory_settings(use_empty=True)
-          bpy.ops.import_scene.gltf(filepath='${{ matrix.project }}/ExportedProject/Assets/Models/firecracker_skyshots_10x.glb')
-          bpy.ops.export_scene.fbx(
-              filepath='${{ matrix.project }}/ExportedProject/Assets/Models/firecracker_skyshots_10x.fbx',
-              use_selection=False,
-              bake_anim=True,
-              bake_anim_use_all_bones=True,
-              bake_anim_use_nla_strips=True,
-              bake_anim_use_all_actions=True,
-              bake_anim_step=1.0,
-              bake_anim_simplify_factor=1.0
-          )
-          '''
-          subprocess.run(['blender', '--background', '--python-expr', script], check=True)
-          "
-          ls -la ${{ matrix.project }}/ExportedProject/Assets/Models/
-          test -f "${{ matrix.project }}/ExportedProject/Assets/Models/firecracker_skyshots_10x.fbx" || { echo 'FATAL: FBX not created!'; exit 1; }
-
       - name: Inject Build Script
         run: |
           mkdir -p ${{ matrix.project }}/ExportedProject/Assets/Editor
