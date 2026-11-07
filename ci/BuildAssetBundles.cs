@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Collections.Generic;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
@@ -27,24 +26,20 @@ public class BuildAssetBundles
             }
         }
 
-        // Run SetupOldCity
-        SetupOldCity.Build();
-
-        List<string> assetPaths = new List<string>
+        // Run SetupBuildingProp
+        try
         {
-            "Assets/test/megacity/cm7.prefab",
-            "Assets/outsidemods/prefab/rgs.prefab"
-        };
+            SetupBuildingProp.Build();
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError("[BuildAssetBundles] Error in SetupBuildingProp.Build: " + ex);
+        }
 
-        AssetBundleBuild[] buildMap = new AssetBundleBuild[1];
-        buildMap[0].assetBundleName = "cm7";
-        buildMap[0].assetNames = assetPaths.ToArray();
-
-        Debug.Log("[BuildAssetBundles] Building 'cm7' AssetBundle (target: " + target + ")...");
+        Debug.Log("[BuildAssetBundles] Building AssetBundles for target: " + target);
         AssetBundleManifest manifest = BuildPipeline.BuildAssetBundles(
             assetBundleDirectory,
-            buildMap,
-            BuildAssetBundleOptions.ChunkBasedCompression,
+            BuildAssetBundleOptions.None,
             target
         );
 

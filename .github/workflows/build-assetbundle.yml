@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        project: [OldCity]
+        project: [Prop]
 
     steps:
       - name: Free Disk Space & Optimize Docker
@@ -53,17 +53,10 @@ jobs:
           echo "Selected Target Platform: $TARGET"
           echo "TARGET_PLATFORM=$TARGET" >> "$GITHUB_ENV"
 
-      - name: Prepare Map Assets
+      - name: Inject Build Script
         run: |
           mkdir -p ${{ matrix.project }}/ExportedProject/Assets/Editor
           cp ci/BuildAssetBundles.cs ${{ matrix.project }}/ExportedProject/Assets/Editor/BuildAssetBundles.cs
-          ZIP_FILE="${{ matrix.project }}/ExportedProject/Assets/Models/old_map_single.zip"
-          if [ -f "$ZIP_FILE" ]; then
-            echo "Unpacking $ZIP_FILE..."
-            unzip -o "$ZIP_FILE" -d "${{ matrix.project }}/ExportedProject/Assets/Models/"
-            mkdir -p "${{ matrix.project }}/ExportedProject/Assets/Texture2D"
-            cp -f "${{ matrix.project }}/ExportedProject/Assets/Models/old_map_texture.png" "${{ matrix.project }}/ExportedProject/Assets/Texture2D/"
-          fi
 
       - name: Build AssetBundles with GameCI
         uses: game-ci/unity-builder@v4
