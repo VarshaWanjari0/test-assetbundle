@@ -15,14 +15,16 @@ public class SetupBuildingProp
         string prefabPath = "Assets/outsidemods/prefab/rgs.prefab";
         string controllerPath = "Assets/AnimatorController/Firecracker.controller";
         string matDir = "Assets/Material";
+        string texDir = "Assets/Texture2D";
 
         if (!Directory.Exists(matDir)) Directory.CreateDirectory(matDir);
+        if (!Directory.Exists(texDir)) Directory.CreateDirectory(texDir);
         if (!Directory.Exists("Assets/AnimatorController")) Directory.CreateDirectory("Assets/AnimatorController");
         if (!Directory.Exists(Path.GetDirectoryName(prefabPath))) Directory.CreateDirectory(Path.GetDirectoryName(prefabPath));
 
         AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
 
-        // 1. Load GLB Model Asset directly (imported natively via glTFast)
+        // 1. Load GLB Model Asset
         GameObject modelAsset = AssetDatabase.LoadAssetAtPath<GameObject>(modelPath);
         if (modelAsset == null)
         {
@@ -30,7 +32,7 @@ public class SetupBuildingProp
         }
         Debug.Log("Successfully loaded GLB modelAsset: " + modelAsset.name);
 
-        // 2. Find AnimationClip in GLB sub-assets
+        // 2. Find AnimationClip
         AnimationClip animClip = null;
         Object[] subAssets = AssetDatabase.LoadAllAssetsAtPath(modelPath);
         foreach (Object obj in subAssets)
@@ -44,19 +46,13 @@ public class SetupBuildingProp
             }
         }
 
-        // 3. Create Persistent Materials on Disk
-        Shader targetShader = Shader.Find("Mobile/Diffuse");
-        if (targetShader == null) targetShader = Shader.Find("Standard");
-
-        Shader addShader = Shader.Find("Mobile/Particles/Additive");
-        if (addShader == null) addShader = targetShader;
-
-        var matDefs = new System.Collections.Generic.Dictionary<string, Color>()
+        // 3. Create True Colored Textures & Materials (No white wash out)
+        var colorPalette = new System.Collections.Generic.Dictionary<string, Color>()
         {
             { "Mat_Gold", new Color(1.0f, 0.8f, 0.1f) },
             { "Mat_Cyan", new Color(0.05f, 0.9f, 1.0f) },
             { "Mat_Magenta", new Color(1.0f, 0.1f, 0.6f) },
-            { "Mat_White", Color.white },
+            { "Mat_White", new Color(0.95f, 0.95f, 0.95f) },
             { "Mat_Amber", new Color(1.0f, 0.5f, 0.1f) },
             { "Mat_Green", new Color(0.1f, 1.0f, 0.3f) },
             { "Mat_Red", new Color(0.9f, 0.1f, 0.15f) },
@@ -65,21 +61,48 @@ public class SetupBuildingProp
             { "Mat_BoxWrap", new Color(0.75f, 0.08f, 0.1f) }
         };
 
+        Shader unlitShader = Shader.Find("Unlit/Color");
+        if (unlitShader == null) unlitShader = Shader.Find("Mobile/Unlit (Supports Lightmap)");
+        if (unlitShader == null) unlitShader = Shader.Find("Standard");
+
+        Shader particleShader = Shader.Find("Mobile/Particles/Additive");
+        if (particleShader == null) particleShader = unlitShader;
+
         var createdMats = new System.Collections.Generic.Dictionary<string, Material>();
-        foreach (var kvp in matDefs)
+        foreach (var kvp in colorPalette)
         {
+            string texPath = texDir + "/" + kvp.Key + ".png";
+            if (!File.Exists(texPath))
+            {
+                Texture2D t = new Texture2D(16, 16, TextureFormat.RGB24, false);
+                Color[] cols = new Color[16 * 16];
+                for (int i = 0; i < cols.Length; i++) cols[i] = kvp.Value;
+                t.SetPixels(cols);
+                t.Apply();
+                byte[] bytes = t.EncodeToPNG();
+                File.WriteAllBytes(texPath, bytes);
+                AssetDatabase.ImportAsset(texPath);
+            }
+
+            Texture2D texAsset = AssetDatabase.LoadAssetAtPath<Texture2D>(texPath);
+            if (texAsset != null) AssetImporter.GetAtPath(texPath).assetBundleName = "rgs";
+
             string mp = matDir + "/" + kvp.Key + ".mat";
             Material m = AssetDatabase.LoadAssetAtPath<Material>(mp);
+            bool isPyro = kvp.Key.Contains("Gold") || kvp.Key.Contains("Cyan") || kvp.Key.Contains("White") || kvp.Key.Contains("Magenta") || kvp.Key.Contains("Amber") || kvp.Key.Contains("Green");
+
             if (m == null)
             {
-                bool isParticle = kvp.Key.Contains("Gold") || kvp.Key.Contains("Cyan") || kvp.Key.Contains("White") || kvp.Key.Contains("Magenta");
-                m = new Material(isParticle ? addShader : targetShader);
+                m = new Material(isPyro ? particleShader : unlitShader);
                 m.color = kvp.Value;
+                if (texAsset != null && m.HasProperty("_MainTex")) m.mainTexture = texAsset;
                 AssetDatabase.CreateAsset(m, mp);
             }
             else
             {
+                m.shader = isPyro ? particleShader : unlitShader;
                 m.color = kvp.Value;
+                if (texAsset != null && m.HasProperty("_MainTex")) m.mainTexture = texAsset;
                 EditorUtility.SetDirty(m);
             }
             createdMats[kvp.Key] = m;
@@ -108,21 +131,29 @@ public class SetupBuildingProp
         bc.center = new Vector3(0f, 0.2f * S, 0f);
         bc.size = new Vector3(0.8f * S, 0.4f * S, 0.8f * S);
 
-        Animator rootAnimator = root.AddComponent<Animator>();
-        rootAnimator.runtimeAnimatorController = controller;
-        rootAnimator.applyRootMotion = false;
-        rootAnimator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
-
-        // 6. Instantiate GLB Model into root
+        // 6. Instantiate GLB Model
         GameObject modelInst = Object.Instantiate(modelAsset, root.transform);
         modelInst.name = "Firecracker_Battery";
         modelInst.transform.localPosition = Vector3.zero;
         modelInst.transform.localRotation = Quaternion.identity;
         modelInst.transform.localScale = Vector3.one * S;
 
-        // Assign persistent disk materials and Layer 0
+        // CRUCIAL: Attach Animator directly to modelInst so animation curve relative paths match 100%!
+        Animator modelAnimator = modelInst.GetComponent<Animator>();
+        if (modelAnimator == null) modelAnimator = modelInst.AddComponent<Animator>();
+        modelAnimator.runtimeAnimatorController = controller;
+        modelAnimator.applyRootMotion = false;
+        modelAnimator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+
+        // Also keep matching Animator on root
+        Animator rootAnimator = root.AddComponent<Animator>();
+        rootAnimator.runtimeAnimatorController = controller;
+        rootAnimator.applyRootMotion = false;
+        rootAnimator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+
+        // 7. Assign Crisp Colored Materials
         Renderer[] renderers = modelInst.GetComponentsInChildren<Renderer>(true);
-        Debug.Log("Assigning persistent materials to " + renderers.Length + " renderers in GLB hierarchy");
+        Debug.Log("Assigning crisp materials to " + renderers.Length + " renderers");
         foreach (Renderer r in renderers)
         {
             r.gameObject.layer = 0;
@@ -130,7 +161,7 @@ public class SetupBuildingProp
             Material selectedMat = createdMats["Mat_BoxWrap"];
 
             if (n.Contains("Tube")) selectedMat = createdMats["Mat_DarkTube"];
-            else if (n.Contains("Gold")) selectedMat = createdMats["Mat_Gold"];
+            else if (n.Contains("Gold") || n.Contains("Trim")) selectedMat = createdMats["Mat_Gold"];
             else if (n.Contains("Cyan")) selectedMat = createdMats["Mat_Cyan"];
             else if (n.Contains("Magenta") || n.Contains("Hot")) selectedMat = createdMats["Mat_Magenta"];
             else if (n.Contains("White") || n.Contains("Flash")) selectedMat = createdMats["Mat_White"];
@@ -141,29 +172,8 @@ public class SetupBuildingProp
             r.sharedMaterial = selectedMat;
         }
 
-        // 7. Blast Lights
-        Color[] blastColors = new Color[] {
-            new Color(1f, 0.84f, 0.0f), new Color(1f, 0.6f, 0.1f), new Color(0.9f, 0.95f, 1f),
-            new Color(0.0f, 0.9f, 1.0f), new Color(1.0f, 0.1f, 0.6f), new Color(0.2f, 1.0f, 0.3f),
-            new Color(1.0f, 0.2f, 0.2f), new Color(0.6f, 0.2f, 1.0f), new Color(1.0f, 0.9f, 0.3f),
-            new Color(1.0f, 0.4f, 0.8f)
-        };
-
-        for (int i = 1; i <= 10; i++)
-        {
-            string targetName = string.Format("S{0:D2}_CoreFlash", i);
-            Transform flashTr = FindChildRecursive(modelInst.transform, targetName);
-            if (flashTr != null)
-            {
-                GameObject lightGo = new GameObject("BlastLight_" + i);
-                lightGo.transform.SetParent(flashTr, false);
-                Light l = lightGo.AddComponent<Light>();
-                l.type = LightType.Point;
-                l.range = 100f;
-                l.intensity = 7f;
-                l.color = blastColors[(i - 1) % blastColors.Length];
-            }
-        }
+        // NOTE: We REMOVED the 10 permanent ground point lights that caused blinding white glow!
+        // Instead, the glowing sky bursts illuminate with their own additive materials naturally.
 
         // 8. AudioSource
         AudioClip audioClip = AssetDatabase.LoadAssetAtPath<AudioClip>(wavPath);
@@ -188,17 +198,6 @@ public class SetupBuildingProp
         AssetImporter.GetAtPath(wavPath).assetBundleName = "rgs";
         AssetImporter.GetAtPath(controllerPath).assetBundleName = "rgs";
 
-        Debug.Log("🎉 glTFast Setup complete: Loaded GLB directly with " + renderers.Length + " renderers, Animator on root, and tagged into rgs bundle!");
-    }
-
-    private static Transform FindChildRecursive(Transform parent, string name)
-    {
-        if (parent.name == name) return parent;
-        for (int i = 0; i < parent.childCount; i++)
-        {
-            Transform res = FindChildRecursive(parent.GetChild(i), name);
-            if (res != null) return res;
-        }
-        return null;
+        Debug.Log("🎉 Setup complete: Model hierarchy animated, blinding lights removed, textures applied, and bundle compressed!");
     }
 }

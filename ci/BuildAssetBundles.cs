@@ -26,13 +26,13 @@ public class BuildAssetBundles
             }
         }
 
-        // Run SetupBuildingProp directly - do NOT catch and ignore exceptions!
         SetupBuildingProp.Build();
 
-        Debug.Log("[BuildAssetBundles] Building AssetBundles for target: " + target);
+        Debug.Log("[BuildAssetBundles] Building Compressed AssetBundles for target: " + target);
+        // Use ChunkBasedCompression (LZ4) as requested to compress the bundle
         AssetBundleManifest manifest = BuildPipeline.BuildAssetBundles(
             assetBundleDirectory,
-            BuildAssetBundleOptions.None,
+            BuildAssetBundleOptions.ChunkBasedCompression,
             target
         );
 
