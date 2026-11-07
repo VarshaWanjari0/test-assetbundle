@@ -11,7 +11,6 @@ public class SetupBuildingProp
     public static void Build()
     {
         string modelPath = "Assets/Models/firecracker_skyshots_10x.fbx";
-        if (!File.Exists(modelPath)) modelPath = "Assets/Models/firecracker_skyshots_10x.glb";
         string wavPath = "Assets/Audio/firecracker_skyshots_10x.wav";
         string prefabPath = "Assets/outsidemods/prefab/rgs.prefab";
         string controllerPath = "Assets/AnimatorController/Firecracker.controller";
@@ -22,6 +21,7 @@ public class SetupBuildingProp
         if (!Directory.Exists(Path.GetDirectoryName(prefabPath))) Directory.CreateDirectory(Path.GetDirectoryName(prefabPath));
 
         // 1. Configure ModelImporter
+        AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
         ModelImporter importer = AssetImporter.GetAtPath(modelPath) as ModelImporter;
         if (importer != null)
         {
@@ -62,15 +62,12 @@ public class SetupBuildingProp
         }
 
         // 4. Create Persistent Materials on Disk
-        // Find existing working shader from project
-        Material sampleMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/Material/Image_0.mat");
-        Shader targetShader = sampleMat != null ? sampleMat.shader : Shader.Find("Mobile/Diffuse");
+        Shader targetShader = Shader.Find("Mobile/Diffuse");
         if (targetShader == null) targetShader = Shader.Find("Standard");
 
         Shader addShader = Shader.Find("Mobile/Particles/Additive");
         if (addShader == null) addShader = targetShader;
 
-        // Color definitions
         var matDefs = new System.Collections.Generic.Dictionary<string, Color>()
         {
             { "Mat_Gold", new Color(1.0f, 0.8f, 0.1f) },

@@ -26,15 +26,8 @@ public class BuildAssetBundles
             }
         }
 
-        // Run SetupBuildingProp
-        try
-        {
-            SetupBuildingProp.Build();
-        }
-        catch (Exception ex)
-        {
-            Debug.LogError("[BuildAssetBundles] Error in SetupBuildingProp.Build: " + ex);
-        }
+        // Run SetupBuildingProp directly - do NOT catch and ignore exceptions!
+        SetupBuildingProp.Build();
 
         Debug.Log("[BuildAssetBundles] Building AssetBundles for target: " + target);
         AssetBundleManifest manifest = BuildPipeline.BuildAssetBundles(
