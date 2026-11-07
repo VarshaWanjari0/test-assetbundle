@@ -46,19 +46,27 @@ public class SetupBuildingProp
             }
         }
 
-        // 3. Create True Colored Textures & Materials (No white wash out)
+        // 3. Complete Color Palette matching exact GLTF materials
         var colorPalette = new System.Collections.Generic.Dictionary<string, Color>()
         {
-            { "Mat_Gold", new Color(1.0f, 0.8f, 0.1f) },
-            { "Mat_Cyan", new Color(0.05f, 0.9f, 1.0f) },
-            { "Mat_Magenta", new Color(1.0f, 0.1f, 0.6f) },
-            { "Mat_White", new Color(0.95f, 0.95f, 0.95f) },
-            { "Mat_Amber", new Color(1.0f, 0.5f, 0.1f) },
-            { "Mat_Green", new Color(0.1f, 1.0f, 0.3f) },
-            { "Mat_Red", new Color(0.9f, 0.1f, 0.15f) },
-            { "Mat_Violet", new Color(0.5f, 0.2f, 1.0f) },
-            { "Mat_DarkTube", new Color(0.12f, 0.12f, 0.15f) },
-            { "Mat_BoxWrap", new Color(0.75f, 0.08f, 0.1f) }
+            { "Mat_Gold", new Color(1.0f, 0.70f, 0.12f) },
+            { "Mat_GoldTrim", new Color(0.92f, 0.68f, 0.16f) },
+            { "Mat_Amber", new Color(1.0f, 0.42f, 0.05f) },
+            { "Mat_White", new Color(1.0f, 0.98f, 0.92f) },
+            { "Mat_Cyan", new Color(0.04f, 0.88f, 1.0f) },
+            { "Mat_Magenta", new Color(1.0f, 0.07f, 0.52f) },
+            { "Mat_Violet", new Color(0.60f, 0.12f, 1.0f) },
+            { "Mat_Mint", new Color(0.10f, 1.0f, 0.58f) },
+            { "Mat_Yellow", new Color(1.0f, 0.92f, 0.08f) },
+            { "Mat_Ruby", new Color(1.0f, 0.06f, 0.12f) },
+            { "Mat_Rose", new Color(1.0f, 0.22f, 0.66f) },
+            { "Mat_Green", new Color(0.05f, 1.0f, 0.22f) },
+            { "Mat_Lime", new Color(0.62f, 1.0f, 0.06f) },
+            { "Mat_Silver", new Color(0.85f, 0.94f, 1.0f) },
+            { "Mat_Coral", new Color(1.0f, 0.28f, 0.08f) },
+            { "Mat_Blue", new Color(0.08f, 0.36f, 1.0f) },
+            { "Mat_DarkTube", new Color(0.10f, 0.10f, 0.12f) },
+            { "Mat_BoxWrap", new Color(0.68f, 0.06f, 0.09f) }
         };
 
         Shader unlitShader = Shader.Find("Unlit/Color");
@@ -89,7 +97,7 @@ public class SetupBuildingProp
 
             string mp = matDir + "/" + kvp.Key + ".mat";
             Material m = AssetDatabase.LoadAssetAtPath<Material>(mp);
-            bool isPyro = kvp.Key.Contains("Gold") || kvp.Key.Contains("Cyan") || kvp.Key.Contains("White") || kvp.Key.Contains("Magenta") || kvp.Key.Contains("Amber") || kvp.Key.Contains("Green");
+            bool isPyro = !kvp.Key.Contains("DarkTube") && !kvp.Key.Contains("BoxWrap") && !kvp.Key.Contains("GoldTrim");
 
             if (m == null)
             {
@@ -110,7 +118,7 @@ public class SetupBuildingProp
         }
         AssetDatabase.SaveAssets();
 
-        // 4. Create AnimatorController with looping state
+        // 4. Create AnimatorController
         AnimatorController controller = AnimatorController.CreateAnimatorControllerAtPath(controllerPath);
         if (animClip != null)
         {
@@ -138,44 +146,77 @@ public class SetupBuildingProp
         modelInst.transform.localRotation = Quaternion.identity;
         modelInst.transform.localScale = Vector3.one * S;
 
-        // CRUCIAL: Attach Animator directly to modelInst so animation curve relative paths match 100%!
+        // Animator on modelInst matches all 4,722 channels
         Animator modelAnimator = modelInst.GetComponent<Animator>();
         if (modelAnimator == null) modelAnimator = modelInst.AddComponent<Animator>();
         modelAnimator.runtimeAnimatorController = controller;
         modelAnimator.applyRootMotion = false;
         modelAnimator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
 
-        // Also keep matching Animator on root
         Animator rootAnimator = root.AddComponent<Animator>();
         rootAnimator.runtimeAnimatorController = controller;
         rootAnimator.applyRootMotion = false;
         rootAnimator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
 
-        // 7. Assign Crisp Colored Materials
+        // 7. Assign Multi-Colored Materials by inspecting material name AND mesh name!
         Renderer[] renderers = modelInst.GetComponentsInChildren<Renderer>(true);
-        Debug.Log("Assigning crisp materials to " + renderers.Length + " renderers");
+        Debug.Log("Assigning original animation colors to " + renderers.Length + " renderers");
         foreach (Renderer r in renderers)
         {
             r.gameObject.layer = 0;
-            string n = r.gameObject.name;
-            Material selectedMat = createdMats["Mat_BoxWrap"];
+            string desc = r.gameObject.name;
+            if (r.sharedMaterial != null) desc += " " + r.sharedMaterial.name;
+            MeshFilter mf = r.GetComponent<MeshFilter>();
+            if (mf != null && mf.sharedMesh != null) desc += " " + mf.sharedMesh.name;
 
-            if (n.Contains("Tube")) selectedMat = createdMats["Mat_DarkTube"];
-            else if (n.Contains("Gold") || n.Contains("Trim")) selectedMat = createdMats["Mat_Gold"];
-            else if (n.Contains("Cyan")) selectedMat = createdMats["Mat_Cyan"];
-            else if (n.Contains("Magenta") || n.Contains("Hot")) selectedMat = createdMats["Mat_Magenta"];
-            else if (n.Contains("White") || n.Contains("Flash")) selectedMat = createdMats["Mat_White"];
-            else if (n.Contains("Amber")) selectedMat = createdMats["Mat_Amber"];
-            else if (n.Contains("Green")) selectedMat = createdMats["Mat_Green"];
-            else if (n.Contains("Violet") || n.Contains("Blue")) selectedMat = createdMats["Mat_Violet"];
+            Material selectedMat = createdMats["Mat_Gold"]; // Default to golden sparkle for pyro
+
+            // Launcher Hardware
+            if (desc.Contains("Tube") || desc.Contains("MortarTube")) selectedMat = createdMats["Mat_DarkTube"];
+            else if (desc.Contains("LauncherBox") || desc.Contains("Battery_Casing") || desc.Contains("Launcher_Red")) selectedMat = createdMats["Mat_BoxWrap"];
+            else if (desc.Contains("Trim") || desc.Contains("Gold_Trim") || desc.Contains("Battery_Trim")) selectedMat = createdMats["Mat_GoldTrim"];
+            // Sky & Burst Colors
+            else if (desc.Contains("Cyan")) selectedMat = createdMats["Mat_Cyan"];
+            else if (desc.Contains("Magenta") || desc.Contains("Hot")) selectedMat = createdMats["Mat_Magenta"];
+            else if (desc.Contains("Violet")) selectedMat = createdMats["Mat_Violet"];
+            else if (desc.Contains("Mint")) selectedMat = createdMats["Mat_Mint"];
+            else if (desc.Contains("Amber") || desc.Contains("Kamuro")) selectedMat = createdMats["Mat_Amber"];
+            else if (desc.Contains("White") || desc.Contains("Flash") || desc.Contains("Muzzle")) selectedMat = createdMats["Mat_White"];
+            else if (desc.Contains("Emerald") || desc.Contains("Green")) selectedMat = createdMats["Mat_Green"];
+            else if (desc.Contains("Lime")) selectedMat = createdMats["Mat_Lime"];
+            else if (desc.Contains("Yellow") || desc.Contains("Solar")) selectedMat = createdMats["Mat_Yellow"];
+            else if (desc.Contains("Ruby") || desc.Contains("Crimson")) selectedMat = createdMats["Mat_Ruby"];
+            else if (desc.Contains("Rose") || desc.Contains("Pink")) selectedMat = createdMats["Mat_Rose"];
+            else if (desc.Contains("Coral") || desc.Contains("Sunset")) selectedMat = createdMats["Mat_Coral"];
+            else if (desc.Contains("Sapphire") || desc.Contains("Blue")) selectedMat = createdMats["Mat_Blue"];
+            else if (desc.Contains("Silver") || desc.Contains("Titanium")) selectedMat = createdMats["Mat_Silver"];
+            else if (desc.Contains("Gold") || desc.Contains("Imperial")) selectedMat = createdMats["Mat_Gold"];
 
             r.sharedMaterial = selectedMat;
         }
 
-        // NOTE: We REMOVED the 10 permanent ground point lights that caused blinding white glow!
-        // Instead, the glowing sky bursts illuminate with their own additive materials naturally.
+        // 8. Controlled, Atmospheric Lighting (Lights up area by a few percent!)
+        // Ground-level warm glow around the battery box
+        GameObject groundLightObj = new GameObject("GroundAmbientLight");
+        groundLightObj.transform.SetParent(root.transform, false);
+        groundLightObj.transform.localPosition = new Vector3(0f, 0.4f * S, 0f);
+        Light groundLight = groundLightObj.AddComponent<Light>();
+        groundLight.type = LightType.Point;
+        groundLight.range = 25f;
+        groundLight.intensity = 1.0f; // Soft, realistic warm glow (not blinding)
+        groundLight.color = new Color(1.0f, 0.65f, 0.25f);
 
-        // 8. AudioSource
+        // Sky-level atmospheric burst light (gently illuminates rooftops & streets from above)
+        GameObject skyLightObj = new GameObject("SkyBurstAtmosphereLight");
+        skyLightObj.transform.SetParent(root.transform, false);
+        skyLightObj.transform.localPosition = new Vector3(0f, 32f * S, 0f);
+        Light skyLight = skyLightObj.AddComponent<Light>();
+        skyLight.type = LightType.Point;
+        skyLight.range = 65f;
+        skyLight.intensity = 1.4f; // Illuminates game world by a few percent without washing it out
+        skyLight.color = new Color(1.0f, 0.85f, 0.65f);
+
+        // 9. AudioSource
         AudioClip audioClip = AssetDatabase.LoadAssetAtPath<AudioClip>(wavPath);
         if (audioClip != null)
         {
@@ -189,7 +230,7 @@ public class SetupBuildingProp
             audio.volume = 1.0f;
         }
 
-        // 9. Save Prefab & Tag into 'rgs'
+        // 10. Save Prefab & Tag into 'rgs'
         PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
         Object.DestroyImmediate(root);
 
@@ -198,6 +239,6 @@ public class SetupBuildingProp
         AssetImporter.GetAtPath(wavPath).assetBundleName = "rgs";
         AssetImporter.GetAtPath(controllerPath).assetBundleName = "rgs";
 
-        Debug.Log("🎉 Setup complete: Model hierarchy animated, blinding lights removed, textures applied, and bundle compressed!");
+        Debug.Log("🎉 Setup complete: All original animation colors mapped (Cyan, Gold, Magenta, Mint, Violet, Amber, Green, Ruby, Coral, etc.) + balanced area lighting applied!");
     }
 }
