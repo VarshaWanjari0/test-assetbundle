@@ -18,23 +18,12 @@ public class SetupBuildingProp
         if (!Directory.Exists("Assets/AnimatorController")) Directory.CreateDirectory("Assets/AnimatorController");
         if (!Directory.Exists(Path.GetDirectoryName(prefabPath))) Directory.CreateDirectory(Path.GetDirectoryName(prefabPath));
 
-        // 1. Configure ModelImporter on DAE model
+        // 1. Configure ModelImporter settings without redundant in-memory reimport
         ModelImporter importer = AssetImporter.GetAtPath(modelPath) as ModelImporter;
-        if (importer != null)
+        if (importer != null && importer.animationType != ModelImporterAnimationType.Generic)
         {
             importer.animationType = ModelImporterAnimationType.Generic;
             importer.importAnimation = true;
-            ModelImporterClipAnimation[] clips = importer.defaultClipAnimations;
-            if (clips != null && clips.Length > 0)
-            {
-                foreach (var clip in clips)
-                {
-                    clip.loopTime = true;
-                    clip.wrapMode = WrapMode.Loop;
-                }
-                importer.clipAnimations = clips;
-            }
-            importer.SaveAndReimport();
         }
 
         // 2. Load DAE Asset

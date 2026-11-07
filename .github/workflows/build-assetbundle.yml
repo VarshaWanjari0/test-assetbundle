@@ -26,7 +26,7 @@ jobs:
         project: [Prop]
 
     steps:
-      - name: Free Disk Space & Optimize Docker
+      - name: Free Disk Space, Enable Swap & Optimize Docker
         run: |
           df -h /
           sudo rm -rf "$AGENT_TOOLSDIRECTORY" &
@@ -37,6 +37,12 @@ jobs:
           echo '{"max-concurrent-downloads": 10}' | sudo tee /etc/docker/daemon.json > /dev/null
           sudo systemctl restart docker &
           wait
+          # Create 10GB swap space to eliminate OOM (exit code 137)
+          sudo fallocate -l 10G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=10240
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+          free -h
           df -h /
 
       - name: Checkout Repository
