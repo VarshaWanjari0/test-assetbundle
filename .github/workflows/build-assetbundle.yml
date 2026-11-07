@@ -37,11 +37,13 @@ jobs:
           echo '{"max-concurrent-downloads": 10}' | sudo tee /etc/docker/daemon.json > /dev/null
           sudo systemctl restart docker &
           wait
-          # Create 10GB swap space to eliminate OOM (exit code 137)
-          sudo fallocate -l 10G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=10240
-          sudo chmod 600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile
+          # Disable existing active swap to prevent "Text file busy", then create 8GB swap
+          sudo swapoff -a || true
+          sudo rm -f /mnt/swapfile /swapfile || true
+          sudo fallocate -l 8G /mnt/swapfile || sudo dd if=/dev/zero of=/mnt/swapfile bs=1M count=8192
+          sudo chmod 600 /mnt/swapfile
+          sudo mkswap /mnt/swapfile
+          sudo swapon /mnt/swapfile
           free -h
           df -h /
 
