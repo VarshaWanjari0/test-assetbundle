@@ -10,7 +10,8 @@ public class SetupBuildingProp
     [MenuItem("Tools/Build Firecracker Prop")]
     public static void Build()
     {
-        string modelPath = "Assets/Models/firecracker_skyshots_10x.dae";
+        string modelPath = "Assets/Models/firecracker_skyshots_10x.fbx";
+        if (!File.Exists(modelPath)) modelPath = "Assets/Models/firecracker_skyshots_10x.glb";
         string wavPath = "Assets/Audio/firecracker_skyshots_10x.wav";
         string prefabPath = "Assets/outsidemods/prefab/rgs.prefab";
         string controllerPath = "Assets/AnimatorController/Firecracker.controller";
@@ -18,15 +19,26 @@ public class SetupBuildingProp
         if (!Directory.Exists("Assets/AnimatorController")) Directory.CreateDirectory("Assets/AnimatorController");
         if (!Directory.Exists(Path.GetDirectoryName(prefabPath))) Directory.CreateDirectory(Path.GetDirectoryName(prefabPath));
 
-        // 1. Configure ModelImporter settings without redundant in-memory reimport
+        // 1. Configure ModelImporter
         ModelImporter importer = AssetImporter.GetAtPath(modelPath) as ModelImporter;
-        if (importer != null && importer.animationType != ModelImporterAnimationType.Generic)
+        if (importer != null)
         {
             importer.animationType = ModelImporterAnimationType.Generic;
             importer.importAnimation = true;
+            importer.materialImportMode = ModelImporterMaterialImportMode.None;
+            ModelImporterClipAnimation[] clips = importer.defaultClipAnimations;
+            if (clips != null && clips.Length > 0)
+            {
+                foreach (var clip in clips)
+                {
+                    clip.loopTime = true;
+                    clip.wrapMode = WrapMode.Loop;
+                }
+                importer.clipAnimations = clips;
+            }
         }
 
-        // 2. Load DAE Asset
+        // 2. Load Model Asset
         GameObject modelAsset = AssetDatabase.LoadAssetAtPath<GameObject>(modelPath);
         if (modelAsset == null)
         {
@@ -42,7 +54,7 @@ public class SetupBuildingProp
             if (obj is AnimationClip && !obj.name.StartsWith("__preview__"))
             {
                 animClip = obj as AnimationClip;
-                Debug.Log("Found AnimationClip in DAE: " + animClip.name);
+                Debug.Log("Found AnimationClip in model: " + animClip.name);
                 break;
             }
         }
@@ -162,7 +174,7 @@ public class SetupBuildingProp
         AssetImporter.GetAtPath(wavPath).assetBundleName = "rgs";
         AssetImporter.GetAtPath(controllerPath).assetBundleName = "rgs";
 
-        Debug.Log("🎉 Setup complete: DAE loaded with " + renderers.Length + " renderers, AnimatorController linked, and tagged into rgs bundle!");
+        Debug.Log("🎉 Setup complete: Model loaded with " + renderers.Length + " renderers, AnimatorController linked, and tagged into rgs bundle!");
     }
 
     private static Transform FindChildRecursive(Transform parent, string name)

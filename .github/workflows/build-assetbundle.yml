@@ -37,7 +37,6 @@ jobs:
           echo '{"max-concurrent-downloads": 10}' | sudo tee /etc/docker/daemon.json > /dev/null
           sudo systemctl restart docker &
           wait
-          # Disable existing active swap to prevent "Text file busy", then create 8GB swap
           sudo swapoff -a || true
           sudo rm -f /mnt/swapfile /swapfile || true
           sudo fallocate -l 8G /mnt/swapfile || sudo dd if=/dev/zero of=/mnt/swapfile bs=1M count=8192
@@ -60,6 +59,32 @@ jobs:
           fi
           echo "Selected Target Platform: $TARGET"
           echo "TARGET_PLATFORM=$TARGET" >> "$GITHUB_ENV"
+
+      - name: Convert GLB to Optimized Unity FBX on Cloud
+        run: |
+          echo "Installing Blender on cloud runner (fast unmetered fiber)..."
+          sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends blender
+          echo "Converting GLB to native Unity binary FBX..."
+          python3 -c "
+          import subprocess
+          script = '''
+          import bpy
+          bpy.ops.wm.read_factory_settings(use_empty=True)
+          bpy.ops.import_scene.gltf(filepath='${{ matrix.project }}/ExportedProject/Assets/Models/firecracker_skyshots_10x.glb')
+          bpy.ops.export_scene.fbx(
+              filepath='${{ matrix.project }}/ExportedProject/Assets/Models/firecracker_skyshots_10x.fbx',
+              use_selection=False,
+              bake_anim=True,
+              bake_anim_use_all_bones=True,
+              bake_anim_use_nla_strips=True,
+              bake_anim_use_all_actions=True,
+              bake_anim_step=1.0,
+              bake_anim_simplify_factor=1.0
+          )
+          '''
+          subprocess.run(['blender', '--background', '--python-expr', script], check=True)
+          "
+          ls -la ${{ matrix.project }}/ExportedProject/Assets/Models/
 
       - name: Inject Build Script
         run: |
