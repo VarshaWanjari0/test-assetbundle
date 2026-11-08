@@ -6,15 +6,16 @@ using System.Collections.Generic;
 
 public class SetupBuildingProp
 {
-    const float S = 2.0f; // 2X SCALE AS REQUESTED
+    // 2X BIGGER THAN BEFORE (Was 2.5f, now 5.0f for massive 2x sky presence)
+    const float S = 5.0f;
 
-    [MenuItem("Tools/Build Fireworks Prop")]
+    [MenuItem("Tools/Build Firecracker Prop")]
     public static void Build()
     {
-        string modelPath = "Assets/Models/Fireworks.glb";
-        string wavPath = "Assets/Audio/Fireworks.wav";
+        string modelPath = "Assets/Models/firecracker_skyshots_10x.glb";
+        string wavPath = "Assets/Audio/firecracker_skyshots_10x.wav";
         string prefabPath = "Assets/outsidemods/prefab/rgs.prefab";
-        string controllerPath = "Assets/AnimatorController/Fireworks.controller";
+        string controllerPath = "Assets/AnimatorController/Firecracker.controller";
         string matDir = "Assets/Material";
         string texDir = "Assets/Texture2D";
 
@@ -47,25 +48,35 @@ public class SetupBuildingProp
             }
         }
 
-        // 3. Multi-Color Palette for Fireworks Show
+        // 3. Multi-Color Palette (All 10 skyshot color themes)
         var colorPalette = new Dictionary<string, Color>()
         {
-            { "Mat_FW_Gold", new Color(1.0f, 0.72f, 0.12f) },
-            { "Mat_FW_Cyan", new Color(0.04f, 0.88f, 1.0f) },
-            { "Mat_FW_Magenta", new Color(1.0f, 0.08f, 0.55f) },
-            { "Mat_FW_Lime", new Color(0.55f, 1.0f, 0.10f) },
-            { "Mat_FW_Blue", new Color(0.12f, 0.40f, 1.0f) },
-            { "Mat_FW_Amber", new Color(1.0f, 0.45f, 0.06f) },
-            { "Mat_FW_Silver", new Color(0.92f, 0.96f, 1.0f) },
-            { "Mat_FW_White", new Color(1.0f, 1.0f, 1.0f) },
-            { "Mat_FW_Ruby", new Color(1.0f, 0.08f, 0.15f) },
-            { "Mat_FW_Purple", new Color(0.65f, 0.15f, 1.0f) }
+            { "Mat_Gold", new Color(1.0f, 0.70f, 0.12f) },
+            { "Mat_GoldTrim", new Color(0.92f, 0.68f, 0.16f) },
+            { "Mat_Amber", new Color(1.0f, 0.42f, 0.05f) },
+            { "Mat_White", new Color(1.0f, 0.98f, 0.92f) },
+            { "Mat_Cyan", new Color(0.04f, 0.88f, 1.0f) },
+            { "Mat_Magenta", new Color(1.0f, 0.07f, 0.52f) },
+            { "Mat_Violet", new Color(0.60f, 0.12f, 1.0f) },
+            { "Mat_Mint", new Color(0.10f, 1.0f, 0.58f) },
+            { "Mat_Yellow", new Color(1.0f, 0.92f, 0.08f) },
+            { "Mat_Ruby", new Color(1.0f, 0.06f, 0.12f) },
+            { "Mat_Rose", new Color(1.0f, 0.22f, 0.66f) },
+            { "Mat_Green", new Color(0.05f, 1.0f, 0.22f) },
+            { "Mat_Lime", new Color(0.62f, 1.0f, 0.06f) },
+            { "Mat_Silver", new Color(0.85f, 0.94f, 1.0f) },
+            { "Mat_Coral", new Color(1.0f, 0.28f, 0.08f) },
+            { "Mat_Blue", new Color(0.08f, 0.36f, 1.0f) },
+            { "Mat_DarkTube", new Color(0.10f, 0.10f, 0.12f) },
+            { "Mat_BoxWrap", new Color(0.68f, 0.06f, 0.09f) }
         };
 
+        Shader unlitShader = Shader.Find("Unlit/Color");
+        if (unlitShader == null) unlitShader = Shader.Find("Mobile/Unlit (Supports Lightmap)");
+        if (unlitShader == null) unlitShader = Shader.Find("Standard");
+
         Shader particleShader = Shader.Find("Mobile/Particles/Additive");
-        if (particleShader == null) particleShader = Shader.Find("Particles/Standard Unlit");
-        if (particleShader == null) particleShader = Shader.Find("Unlit/Color");
-        if (particleShader == null) particleShader = Shader.Find("Standard");
+        if (particleShader == null) particleShader = unlitShader;
 
         var createdMats = new Dictionary<string, Material>();
         foreach (var kvp in colorPalette)
@@ -88,16 +99,18 @@ public class SetupBuildingProp
 
             string mp = matDir + "/" + kvp.Key + ".mat";
             Material m = AssetDatabase.LoadAssetAtPath<Material>(mp);
+            bool isPyro = !kvp.Key.Contains("DarkTube") && !kvp.Key.Contains("BoxWrap") && !kvp.Key.Contains("GoldTrim");
+
             if (m == null)
             {
-                m = new Material(particleShader);
+                m = new Material(isPyro ? particleShader : unlitShader);
                 m.color = kvp.Value;
                 if (texAsset != null && m.HasProperty("_MainTex")) m.mainTexture = texAsset;
                 AssetDatabase.CreateAsset(m, mp);
             }
             else
             {
-                m.shader = particleShader;
+                m.shader = isPyro ? particleShader : unlitShader;
                 m.color = kvp.Value;
                 if (texAsset != null && m.HasProperty("_MainTex")) m.mainTexture = texAsset;
                 EditorUtility.SetDirty(m);
@@ -112,7 +125,7 @@ public class SetupBuildingProp
         if (animClip != null)
         {
             AnimatorStateMachine sm = controller.layers[0].stateMachine;
-            AnimatorState loopState = sm.AddState("LoopFireworks");
+            AnimatorState loopState = sm.AddState("LoopSkyshots");
             loopState.motion = animClip;
             sm.defaultState = loopState;
         }
@@ -126,14 +139,14 @@ public class SetupBuildingProp
 
         BoxCollider bc = root.AddComponent<BoxCollider>();
         bc.center = new Vector3(0f, 0.2f * S, 0f);
-        bc.size = new Vector3(1.2f * S, 0.4f * S, 1.2f * S);
+        bc.size = new Vector3(0.8f * S, 0.4f * S, 0.8f * S);
 
-        // 6. Instantiate Model
+        // 6. Instantiate GLB Model
         GameObject modelInst = Object.Instantiate(modelAsset, root.transform);
-        modelInst.name = "Fireworks_Show";
+        modelInst.name = "Firecracker_Battery";
         modelInst.transform.localPosition = Vector3.zero;
         modelInst.transform.localRotation = Quaternion.identity;
-        modelInst.transform.localScale = Vector3.one * S; // 2x SCALE
+        modelInst.transform.localScale = Vector3.one * S;
 
         // Animator on modelInst matching channel paths
         Animator modelAnimator = modelInst.GetComponent<Animator>();
@@ -147,7 +160,7 @@ public class SetupBuildingProp
         rootAnimator.applyRootMotion = false;
         rootAnimator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
 
-        // 7. Mesh Optimization (Low-Poly Cache & Draw Call Performance)
+        // 7. Mesh Optimization (Low-Poly Vertex Cache Coherence for Mobile GPU)
         HashSet<Mesh> optimizedMeshes = new HashSet<Mesh>();
         MeshFilter[] meshFilters = modelInst.GetComponentsInChildren<MeshFilter>(true);
         foreach (MeshFilter mf in meshFilters)
@@ -158,57 +171,65 @@ public class SetupBuildingProp
                 optimizedMeshes.Add(mf.sharedMesh);
             }
         }
-        Debug.Log("Optimized " + optimizedMeshes.Count + " meshes for mobile GPU performance.");
+        Debug.Log("Optimized " + optimizedMeshes.Count + " meshes for mobile GPU cache and performance.");
 
-        // 8. Assign Multi-Colored Additive Materials
+        // 8. Assign Multi-Colored Materials
         Renderer[] renderers = modelInst.GetComponentsInChildren<Renderer>(true);
-        Debug.Log("Assigning multi-color materials to " + renderers.Length + " renderers");
+        Debug.Log("Assigning original animation colors to " + renderers.Length + " renderers");
         foreach (Renderer r in renderers)
         {
             r.gameObject.layer = 0;
-            string desc = r.gameObject.name.ToLower();
+            string desc = r.gameObject.name;
+            if (r.sharedMaterial != null) desc += " " + r.sharedMaterial.name;
             MeshFilter mf = r.GetComponent<MeshFilter>();
-            if (mf != null && mf.sharedMesh != null) desc += " " + mf.sharedMesh.name.ToLower();
-            if (r.sharedMaterial != null) desc += " " + r.sharedMaterial.name.ToLower();
+            if (mf != null && mf.sharedMesh != null) desc += " " + mf.sharedMesh.name;
 
-            Material selectedMat = createdMats["Mat_FW_Gold"]; // Default to vibrant golden burst
+            Material selectedMat = createdMats["Mat_Gold"]; // Default to golden sparkle
 
-            if (desc.Contains("cyan")) selectedMat = createdMats["Mat_FW_Cyan"];
-            else if (desc.Contains("magenta") || desc.Contains("pink")) selectedMat = createdMats["Mat_FW_Magenta"];
-            else if (desc.Contains("lime") || desc.Contains("green")) selectedMat = createdMats["Mat_FW_Lime"];
-            else if (desc.Contains("blue") || desc.Contains("deep_blue")) selectedMat = createdMats["Mat_FW_Blue"];
-            else if (desc.Contains("amber")) selectedMat = createdMats["Mat_FW_Amber"];
-            else if (desc.Contains("silver")) selectedMat = createdMats["Mat_FW_Silver"];
-            else if (desc.Contains("white") || desc.Contains("warm_white")) selectedMat = createdMats["Mat_FW_White"];
-            else if (desc.Contains("ruby") || desc.Contains("red")) selectedMat = createdMats["Mat_FW_Ruby"];
-            else if (desc.Contains("purple") || desc.Contains("violet")) selectedMat = createdMats["Mat_FW_Purple"];
-            else if (desc.Contains("gold")) selectedMat = createdMats["Mat_FW_Gold"];
+            // Launcher Hardware
+            if (desc.Contains("Tube") || desc.Contains("MortarTube")) selectedMat = createdMats["Mat_DarkTube"];
+            else if (desc.Contains("LauncherBox") || desc.Contains("Battery_Casing") || desc.Contains("Launcher_Red")) selectedMat = createdMats["Mat_BoxWrap"];
+            else if (desc.Contains("Trim") || desc.Contains("Gold_Trim") || desc.Contains("Battery_Trim")) selectedMat = createdMats["Mat_GoldTrim"];
+            // Sky & Burst Colors
+            else if (desc.Contains("Cyan")) selectedMat = createdMats["Mat_Cyan"];
+            else if (desc.Contains("Magenta") || desc.Contains("Hot")) selectedMat = createdMats["Mat_Magenta"];
+            else if (desc.Contains("Violet")) selectedMat = createdMats["Mat_Violet"];
+            else if (desc.Contains("Mint")) selectedMat = createdMats["Mat_Mint"];
+            else if (desc.Contains("Amber") || desc.Contains("Kamuro")) selectedMat = createdMats["Mat_Amber"];
+            else if (desc.Contains("White") || desc.Contains("Flash") || desc.Contains("Muzzle")) selectedMat = createdMats["Mat_White"];
+            else if (desc.Contains("Emerald") || desc.Contains("Green")) selectedMat = createdMats["Mat_Green"];
+            else if (desc.Contains("Lime")) selectedMat = createdMats["Mat_Lime"];
+            else if (desc.Contains("Yellow") || desc.Contains("Solar")) selectedMat = createdMats["Mat_Yellow"];
+            else if (desc.Contains("Ruby") || desc.Contains("Crimson")) selectedMat = createdMats["Mat_Ruby"];
+            else if (desc.Contains("Rose") || desc.Contains("Pink")) selectedMat = createdMats["Mat_Rose"];
+            else if (desc.Contains("Coral") || desc.Contains("Sunset")) selectedMat = createdMats["Mat_Coral"];
+            else if (desc.Contains("Sapphire") || desc.Contains("Blue")) selectedMat = createdMats["Mat_Blue"];
+            else if (desc.Contains("Silver") || desc.Contains("Titanium")) selectedMat = createdMats["Mat_Silver"];
+            else if (desc.Contains("Gold") || desc.Contains("Imperial")) selectedMat = createdMats["Mat_Gold"];
 
             r.sharedMaterial = selectedMat;
         }
 
-        // 9. Balanced Area Lighting (Lights up area by a few percent)
-        // Ground-level ambient glow
-        GameObject groundLightObj = new GameObject("GroundLight");
+        // 9. Balanced Area Lighting (Scaled 2x for massive presence)
+        GameObject groundLightObj = new GameObject("GroundAmbientLight");
         groundLightObj.transform.SetParent(root.transform, false);
-        groundLightObj.transform.localPosition = new Vector3(0f, 0.5f * S, 0f);
+        groundLightObj.transform.localPosition = new Vector3(0f, 0.4f * S, 0f);
         Light groundLight = groundLightObj.AddComponent<Light>();
         groundLight.type = LightType.Point;
-        groundLight.range = 30f * S;
-        groundLight.intensity = 0.9f;
+        groundLight.range = 35f * (S / 2.5f);
+        groundLight.intensity = 1.0f;
         groundLight.color = new Color(1.0f, 0.65f, 0.25f);
 
-        // Sky-level atmospheric burst light
-        GameObject skyLightObj = new GameObject("SkyBurstLight");
+        GameObject skyLightObj = new GameObject("SkyBurstAtmosphereLight");
         skyLightObj.transform.SetParent(root.transform, false);
-        skyLightObj.transform.localPosition = new Vector3(0f, 35f * S, 0f);
+        skyLightObj.transform.localPosition = new Vector3(0f, 32f * S, 0f);
         Light skyLight = skyLightObj.AddComponent<Light>();
         skyLight.type = LightType.Point;
-        skyLight.range = 80f * S;
-        skyLight.intensity = 1.3f;
+        skyLight.range = 80f * (S / 2.5f);
+        skyLight.intensity = 1.4f;
         skyLight.color = new Color(1.0f, 0.85f, 0.65f);
 
-        // 10. Synced 59-Second 3D AudioSource
+        // 10. AudioSource (42s loop)
         AudioClip audioClip = AssetDatabase.LoadAssetAtPath<AudioClip>(wavPath);
         if (audioClip != null)
         {
@@ -231,6 +252,6 @@ public class SetupBuildingProp
         AssetImporter.GetAtPath(wavPath).assetBundleName = "rgs";
         AssetImporter.GetAtPath(controllerPath).assetBundleName = "rgs";
 
-        Debug.Log("🎉 Fireworks 2x Show Build complete: 2x scale, GPU-optimized meshes, multi-colored additive materials, and synced 59s audio!");
+        Debug.Log("🎉 Setup complete: 2x Big Skyshot with GPU mesh optimization, multi-color palette, and synced 42s audio!");
     }
 }
