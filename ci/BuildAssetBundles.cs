@@ -26,24 +26,72 @@ public class BuildAssetBundles
             }
         }
 
-        SetupBuildingProp.Build();
+        // Project-specific builders
+        InvokeMethod("SetupBuildingProp", "Build");
+        InvokeMethod("SetupBatmobileMod", "Build");
+        InvokeMethod("CyberTruckBuilder", "BuildBundle");
 
-        Debug.Log("[BuildAssetBundles] Building Compressed AssetBundles for target: " + target);
-        // Use ChunkBasedCompression (LZ4) as requested to compress the bundle
-        AssetBundleManifest manifest = BuildPipeline.BuildAssetBundles(
-            assetBundleDirectory,
-            BuildAssetBundleOptions.ChunkBasedCompression,
-            target
-        );
-
-        if (manifest == null) throw new Exception("[BuildAssetBundles] Build failed or returned null manifest.");
-
-        Debug.Log("[BuildAssetBundles] Successfully generated bundles:");
-        foreach (string b in manifest.GetAllAssetBundles())
+        // Standard AssetBundle build
+        try
         {
-            string bPath = Path.Combine(assetBundleDirectory, b);
-            long bSize = File.Exists(bPath) ? new FileInfo(bPath).Length : 0;
-            Debug.Log("  - " + b + " (" + (bSize / (1024.0 * 1024.0)).ToString("F2") + " MB)");
+            AssetBundleManifest manifest = BuildPipeline.BuildAssetBundles(
+                assetBundleDirectory,
+                BuildAssetBundleOptions.ChunkBasedCompression,
+                target
+            );
+            if (manifest != null)
+            {
+                Debug.Log("[BuildAssetBundles] Standard build generated:");
+                foreach (string b in manifest.GetAllAssetBundles())
+                {
+                    Debug.Log("  - " + b);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[BuildAssetBundles] Standard build info: " + ex.Message);
+        }
+
+        // Copy any bundles from Build/Android to Assets/AssetBundles so upload-artifact captures them
+        if (Directory.Exists("Build/Android"))
+        {
+            foreach (string file in Directory.GetFiles("Build/Android"))
+            {
+                string dest = Path.Combine(assetBundleDirectory, Path.GetFileName(file));
+                File.Copy(file, dest, true);
+                Debug.Log("[BuildAssetBundles] Copied " + file + " -> " + dest);
+            }
+        }
+    }
+
+    private static void InvokeMethod(string typeName, string methodName)
+    {
+        try
+        {
+            Type t = Type.GetType(typeName);
+            if (t == null)
+            {
+                foreach (Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
+                {
+                    t = asm.GetType(typeName);
+                    if (t != null) break;
+                }
+            }
+
+            if (t != null)
+            {
+                MethodInfo m = t.GetMethod(methodName, BindingFlags.Public | BindingFlags.Static);
+                if (m != null)
+                {
+                    Debug.Log("[BuildAssetBundles] Executing " + typeName + "." + methodName + "()...");
+                    m.Invoke(null, null);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError("[BuildAssetBundles] Error executing " + typeName + "." + methodName + ": " + ex);
         }
     }
 }

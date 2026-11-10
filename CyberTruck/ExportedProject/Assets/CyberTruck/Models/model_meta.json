@@ -1,0 +1,323 @@
+{
+  "boxes": {
+    "body": [
+      [
+        0.0,
+        0.75,
+        0.0
+      ],
+      [
+        2.05,
+        1.5,
+        5.35
+      ]
+    ],
+    "skirt": [
+      [
+        0.0,
+        0.32,
+        0.0
+      ],
+      [
+        1.95,
+        0.64,
+        5.2
+      ]
+    ],
+    "cabin": [
+      [
+        0.0,
+        1.0,
+        0.15
+      ],
+      [
+        1.85,
+        1.4,
+        2.5
+      ]
+    ],
+    "protect": [
+      [
+        1.85,
+        1.45,
+        2.4
+      ]
+    ],
+    "kill": [
+      [
+        1.95,
+        0.9,
+        0.95
+      ]
+    ]
+  },
+  "camDis": 7.0,
+  "source": "CyberTruck.fbx",
+  "scale": 0.2459,
+  "offset": [
+    -0.0082,
+    0.754,
+    0.2302
+  ],
+  "body": {
+    "min": [
+      -1.1064,
+      0.0,
+      -2.8903
+    ],
+    "max": [
+      1.0706,
+      1.7918,
+      2.7012
+    ],
+    "size": [
+      2.177,
+      1.7918,
+      5.5914
+    ]
+  },
+  "glass": {
+    "z": [
+      -2.8889,
+      2.6834
+    ],
+    "roofY": 1.7918
+  },
+  "wheels": {
+    "Wheel_FR": {
+      "position": [
+        0.831,
+        0.4874,
+        1.7985
+      ],
+      "radius": 0.4762,
+      "halfWidth": 0.2445,
+      "rim": 0.2952,
+      "tris": 362
+    },
+    "Wheel_FL": {
+      "position": [
+        -0.8694,
+        0.4631,
+        1.7988
+      ],
+      "radius": 0.4681,
+      "halfWidth": 0.2463,
+      "rim": 0.2903,
+      "tris": 393
+    },
+    "Wheel_RR": {
+      "position": [
+        0.8986,
+        0.4631,
+        -1.8005
+      ],
+      "radius": 0.4676,
+      "halfWidth": 0.1835,
+      "rim": 0.2899,
+      "tris": 393
+    },
+    "Wheel_RL": {
+      "position": [
+        -0.8603,
+        0.4727,
+        -1.7985
+      ],
+      "radius": 0.477,
+      "halfWidth": 0.2611,
+      "rim": 0.2958,
+      "tris": 393
+    }
+  },
+  "anchors": {
+    "Center of Mass": [
+      0.0,
+      0.6,
+      0.1
+    ],
+    "Cam": [
+      0.0,
+      1.45,
+      0.3
+    ],
+    "SitPosL": [
+      -0.42,
+      0.88,
+      0.2
+    ],
+    "DoorPos": [
+      1.0264,
+      0.95,
+      0.2
+    ],
+    "Interior": [
+      -0.42,
+      1.28,
+      0.2
+    ],
+    "InteriorCam": [
+      -0.42,
+      1.32,
+      0.42
+    ],
+    "Speedometer": [
+      -0.28,
+      1.02,
+      0.86
+    ],
+    "RPMSpeedometer": [
+      -0.56,
+      1.02,
+      0.86
+    ],
+    "steering_dummy": [
+      -0.42,
+      1.04,
+      0.82
+    ],
+    "Steer": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "LeftHand": [
+      -0.26,
+      0.0,
+      0.0
+    ],
+    "RightHand": [
+      0.26,
+      0.0,
+      0.0
+    ],
+    "LeftFoot": [
+      -0.32,
+      0.16,
+      1.06
+    ],
+    "RightFoot": [
+      0.32,
+      0.16,
+      1.06
+    ],
+    "ExhustedSmoke (1)": [
+      0.55,
+      0.4,
+      -2.6103
+    ],
+    "Fire2": [
+      0.0,
+      0.85,
+      0.0
+    ],
+    "Explosive Vehicle": [
+      0.0,
+      0.85,
+      0.0
+    ],
+    "EngineSound": [
+      0.0,
+      0.55,
+      1.5012
+    ],
+    "EngineSound 2": [
+      0.0,
+      0.55,
+      1.5012
+    ],
+    "CrashSound": [
+      0.0,
+      0.65,
+      0.6
+    ],
+    "HeadLight_Audio": [
+      0.0,
+      1.02,
+      2.2512
+    ],
+    "HeadLights": [
+      0.0,
+      1.02,
+      2.4012
+    ],
+    "TriggerKill": [
+      0.0,
+      0.45,
+      2.2512
+    ],
+    "Player Protect": [
+      0.0,
+      1.05,
+      0.2
+    ]
+  },
+  "parts": [
+    {
+      "name": "CyberTruck_Body",
+      "translation": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "tris": 2082,
+      "mats": [
+        "CyberTruck_Body",
+        "CyberTruck_Trim",
+        "CyberTruck_Light",
+        "CyberTruck_Tail"
+      ]
+    },
+    {
+      "name": "Wheel_FR",
+      "translation": [
+        0.831,
+        0.4874,
+        1.7985
+      ],
+      "tris": 362,
+      "mats": [
+        "CyberTruck_Tire",
+        "CyberTruck_Rim"
+      ]
+    },
+    {
+      "name": "Wheel_FL",
+      "translation": [
+        -0.8694,
+        0.4631,
+        1.7988
+      ],
+      "tris": 393,
+      "mats": [
+        "CyberTruck_Tire",
+        "CyberTruck_Rim"
+      ]
+    },
+    {
+      "name": "Wheel_RR",
+      "translation": [
+        0.8986,
+        0.4631,
+        -1.8005
+      ],
+      "tris": 393,
+      "mats": [
+        "CyberTruck_Tire",
+        "CyberTruck_Rim"
+      ]
+    },
+    {
+      "name": "Wheel_RL",
+      "translation": [
+        -0.8603,
+        0.4727,
+        -1.7985
+      ],
+      "tris": 393,
+      "mats": [
+        "CyberTruck_Tire",
+        "CyberTruck_Rim"
+      ]
+    }
+  ]
+}

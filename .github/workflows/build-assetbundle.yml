@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        project: [Prop]
+        project: [CyberTruck]
 
     steps:
       - name: Free Disk Space, Enable Swap & Optimize Docker
@@ -82,5 +82,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: AssetBundles-${{ matrix.project }}-${{ env.TARGET_PLATFORM }}
-          path: ${{ matrix.project }}/ExportedProject/Assets/AssetBundles/
+          path: |
+            ${{ matrix.project }}/ExportedProject/Assets/AssetBundles/
+            ${{ matrix.project }}/ExportedProject/Build/Android/
           if-no-files-found: warn
