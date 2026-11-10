@@ -200,11 +200,11 @@ public static class CyberTruckBuilder
         if (!mi.isReadable) { mi.isReadable = true; dirty = true; }
         if (mi.useFileScale) { mi.useFileScale = false; dirty = true; }      // 1 unit == 1 m
         if (Mathf.Abs(mi.globalScale - 1f) > 0.0001f) { mi.globalScale = 1f; dirty = true; }
-        if (mi.importMaterials == false) { mi.importMaterials = true; dirty = true; }
+        if (mi.materialImportMode == ModelImporterMaterialImportMode.None) { mi.materialImportMode = ModelImporterMaterialImportMode.ImportViaMaterialDescription; dirty = true; }
         if (mi.importAnimation) { mi.importAnimation = false; dirty = true; }
         if (mi.animationType != ModelImporterAnimationType.None) { mi.animationType = ModelImporterAnimationType.None; dirty = true; }
         if (mi.meshCompression != ModelImporterMeshCompression.Off) { mi.meshCompression = ModelImporterMeshCompression.Off; dirty = true; }
-        if (mi.addColliders) { mi.addColliders = false; dirty = true; }
+        if (mi.addCollider) { mi.addCollider = false; dirty = true; }
         // keep the axis conversion Unity does by default (RH -> LH); the FBX is
         // authored so the car ends up facing +Z with its right side at +X
         if (mi.bakeAxisConversion) { mi.bakeAxisConversion = false; dirty = true; }
