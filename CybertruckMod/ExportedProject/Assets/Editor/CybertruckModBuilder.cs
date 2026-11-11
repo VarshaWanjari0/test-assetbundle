@@ -24,7 +24,8 @@
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
-using UnityEditor.BuildPipeline;
+using UnityEditor;
+using static UnityEditor.BuildPipeline;
 using System.IO;
 using System.Collections.Generic;
 
