@@ -82,7 +82,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: AssetBundles-${{ matrix.project }}-${{ env.TARGET_PLATFORM }}
-                    path: |
+          path: |
             ${{ matrix.project }}/ExportedProject/Assets/AssetBundles/
             ${{ matrix.project }}/ExportedProject/AssetBundles/
             ${{ matrix.project }}/ExportedProject/Build/Android/

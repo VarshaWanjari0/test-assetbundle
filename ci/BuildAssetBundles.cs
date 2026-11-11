@@ -56,6 +56,15 @@ public class BuildAssetBundles
         }
 
         // Copy any bundles from Build/Android to Assets/AssetBundles so upload-artifact captures them
+        if (Directory.Exists("AssetBundles/Android"))
+        {
+            foreach (string file in Directory.GetFiles("AssetBundles/Android"))
+            {
+                string dest = Path.Combine(assetBundleDirectory, Path.GetFileName(file));
+                File.Copy(file, dest, true);
+                Debug.Log("[BuildAssetBundles] Copied " + file + " -> " + dest);
+            }
+        }
         if (Directory.Exists("Build/Android"))
         {
             foreach (string file in Directory.GetFiles("Build/Android"))
