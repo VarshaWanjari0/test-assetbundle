@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
@@ -16,9 +17,9 @@ public class SetupBatmobileMod
             return;
         }
 
-        // Force import model assets
+        // Force import Cybertruck model assets
         string[] modelFiles = new string[] {
-            "Assets/Models/batmobile_body.obj",
+            "Assets/Models/cybertruck_body.obj",
             "Assets/Models/wheel_FL.obj",
             "Assets/Models/wheel_FR.obj",
             "Assets/Models/wheel_RL.obj",
@@ -32,9 +33,9 @@ public class SetupBatmobileMod
         GameObject root = PrefabUtility.LoadPrefabContents(prefabPath);
         try
         {
-            Debug.Log("[SetupBatmobileMod] Configuring Batmobile at 75% size with accurate hitbox and right-side sit area...");
+            Debug.Log("[SetupCyberTruckMod] Configuring CyberTruck vehicle...");
 
-            // 1. Swap Truck Body Mesh on carzyCar/truck/Cargodoor_left
+            // 1. Swap Body Mesh on carzyCar/truck/Cargodoor_left
             Transform carzyCar = root.transform.Find("carzyCar");
             if (carzyCar != null)
             {
@@ -56,7 +57,7 @@ public class SetupBatmobileMod
                         body.localRotation = Quaternion.identity;
                         body.localScale = Vector3.one;
 
-                        Mesh bodyMesh = GetMeshFromAsset("Assets/Models/batmobile_body.obj");
+                        Mesh bodyMesh = GetMeshFromAsset("Assets/Models/cybertruck_body.obj");
                         if (bodyMesh != null)
                         {
                             MeshFilter mf = body.GetComponent<MeshFilter>();
@@ -66,42 +67,35 @@ public class SetupBatmobileMod
                             if (mr != null)
                             {
                                 mr.enabled = true;
-                                Material batMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/Material/Batmobile_Body.mat");
-                                if (batMat != null)
+                                Material bodyMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/Material/Body_white.mat");
+                                if (bodyMat != null)
                                 {
-                                    mr.sharedMaterials = new Material[] { batMat };
+                                    // Stainless steel Cybertruck finish
+                                    bodyMat.SetColor("_Color", new Color(0.82f, 0.84f, 0.86f, 1f));
+                                    bodyMat.SetFloat("_Metallic", 0.90f);
+                                    bodyMat.SetFloat("_Glossiness", 0.75f);
+                                    mr.sharedMaterials = new Material[] { bodyMat };
                                 }
                             }
-                            Debug.Log("[SetupBatmobileMod] Batmobile body assigned successfully!");
+                            Debug.Log("[SetupCyberTruckMod] Cybertruck body mesh assigned!");
                         }
                     }
                 }
             }
 
-            // 2. Setup 4 Wheels for 75% size (radius = 0.66m)
-            float wheelRadius = 0.66f;
-            Vector3 posFL = new Vector3(-2.00f, 0.74f,  3.58f);
-            Vector3 posFR = new Vector3( 2.00f, 0.74f,  3.58f);
-            Vector3 posRL = new Vector3(-2.38f, 0.74f, -2.96f);
-            Vector3 posRR = new Vector3( 2.38f, 0.74f, -2.96f);
+            // 2. Setup 4 Rotating Wheels with Cybertruck Wheelbase and Track Width
+            float wheelRadius = 0.47f;
+            Vector3 posFL = new Vector3(-1.00f, 0.70f,  1.60f);
+            Vector3 posFR = new Vector3( 1.00f, 0.70f,  1.60f);
+            Vector3 posRL = new Vector3(-1.00f, 0.70f, -2.07f);
+            Vector3 posRR = new Vector3( 1.00f, 0.70f, -2.07f);
 
             SetupWheel(root, "Wheel collider/Col FL", "Wheel Model/FL", "wheel_FL", posFL, wheelRadius, "Assets/Models/wheel_FL.obj");
             SetupWheel(root, "Wheel collider/Col FR", "Wheel Model/FR", "wheel_FL", posFR, wheelRadius, "Assets/Models/wheel_FR.obj");
             SetupWheel(root, "Wheel collider/Col RL", "Wheel Model/RL", "wheel_RL", posRL, wheelRadius, "Assets/Models/wheel_RL.obj");
-            SetupWheel(root, "Wheel collider/Col RR", "Wheel Model/RR", "wheel_RL", posRR, wheelRadius, "Assets/Models/wheel_RL.obj");
+            SetupWheel(root, "Wheel collider/Col RR", "Wheel Model/RR", "wheel_RL", posRR, wheelRadius, "Assets/Models/wheel_RR.obj");
 
-            // 3. Remove steering wheel model
-            Transform steerDummy = root.transform.Find("steering_dummy");
-            if (steerDummy != null)
-            {
-                foreach (Renderer r in steerDummy.GetComponentsInChildren<Renderer>(true))
-                {
-                    r.enabled = false;
-                }
-                steerDummy.localScale = Vector3.zero;
-            }
-
-            // Hide old truck doors
+            // 3. Hide old truck doors
             Transform doorFL = root.transform.Find("Doors/DoorFL/Door_Right");
             if (doorFL != null)
             {
@@ -115,76 +109,88 @@ public class SetupBatmobileMod
                 if (mr != null) mr.enabled = false;
             }
 
-            // 4. Invisible rear cockpit seating
-            Vector3 invisibleSitPos = new Vector3(0.0f, 1.10f, -1.80f);
+            // 4. Cockpit Seating & Cameras
+            Vector3 cockpitSitPos = new Vector3(-0.42f, 0.88f, 0.20f);
             Transform sitPos = root.transform.Find("SitPosL");
-            if (sitPos != null) sitPos.localPosition = invisibleSitPos;
+            if (sitPos != null)
+            {
+                sitPos.localPosition = cockpitSitPos;
+                sitPos.localScale = new Vector3(0.85f, 0.85f, 0.85f);
+            }
 
             Transform leftFoot = root.transform.Find("LeftFoot");
-            if (leftFoot != null) leftFoot.localPosition = invisibleSitPos;
+            if (leftFoot != null) leftFoot.localPosition = cockpitSitPos;
 
             Transform rightFoot = root.transform.Find("RightFoot");
-            if (rightFoot != null) rightFoot.localPosition = invisibleSitPos;
+            if (rightFoot != null) rightFoot.localPosition = cockpitSitPos;
 
             Transform interior = root.transform.Find("Interior");
-            if (interior != null) interior.localPosition = invisibleSitPos;
+            if (interior != null) interior.localPosition = cockpitSitPos;
 
             Transform interiorCam = root.transform.Find("Interior/InteriorCam");
-            if (interiorCam != null) interiorCam.localPosition = new Vector3(0.0f, 0.30f, 0.10f);
+            if (interiorCam != null) interiorCam.localPosition = new Vector3(-0.42f, 1.25f, 0.35f);
 
+            Transform doorPos = root.transform.Find("DoorPos");
+            if (doorPos != null)
+            {
+                doorPos.localPosition = new Vector3(1.30f, 0.50f, 0.20f);
+                doorPos.localScale = Vector3.one;
+            }
+
+            Transform cam = root.transform.Find("Cam");
+            if (cam != null) cam.localPosition = new Vector3(0.0f, 1.60f, 0.20f);
+
+            RidingCar rc = root.GetComponent<RidingCar>();
+            if (rc != null)
+            {
+                rc.CamDis = 10;
+                rc.frontGlass = null;
+            }
+
+            Transform steerDummy = root.transform.Find("steering_dummy");
+            if (steerDummy != null)
+            {
+                foreach (Renderer r in steerDummy.GetComponentsInChildren<Renderer>(true))
+                {
+                    r.enabled = false;
+                }
+                steerDummy.localScale = Vector3.zero;
+            }
+
+            // Player Protect Solid Shield
             Transform playerProtect = root.transform.Find("Player Protect");
             if (playerProtect != null)
             {
-                playerProtect.localPosition = invisibleSitPos;
+                playerProtect.localPosition = new Vector3(0.0f, 1.05f, 0.20f);
                 BoxCollider ppCol = playerProtect.GetComponent<BoxCollider>();
                 if (ppCol != null)
                 {
                     ppCol.center = Vector3.zero;
-                    ppCol.size = new Vector3(1.80f, 1.50f, 1.80f);
+                    ppCol.size = new Vector3(1.85f, 1.45f, 2.40f);
+                    ppCol.enabled = true;
                 }
             }
 
-            // 5. Large Right-Side Door Entry Area & Co-located DoorPos
-            // Placing DoorPos directly within the trigger area prevents RidingCar distance checks from prematurely hiding the button
-            Vector3 doorPosition = new Vector3(2.80f, 0.25f, 0.50f);
-            Transform doorPos = root.transform.Find("DoorPos");
-            if (doorPos != null) doorPos.localPosition = doorPosition;
-
-            // Camera Look-at Pivot: Geometric center of vehicle (0, 1.60, 0)
-            Transform cam = root.transform.Find("Cam");
-            if (cam != null) cam.localPosition = new Vector3(0.0f, 1.60f, 0.0f);
-
-            RidingCar rc = root.GetComponent<RidingCar>();
-            if (rc != null) rc.CamDis = 14; // Framed for 11.4m vehicle
-
-            // Rear jet exhaust particle
-            Transform smoke = root.transform.Find("ExhustedSmoke (1)");
-            if (smoke != null) smoke.localPosition = new Vector3(0.0f, 1.00f, -5.70f);
-
+            // Disable TriggerKill
             Transform triggerKill = root.transform.Find("TriggerKill");
-            if (triggerKill != null) triggerKill.localPosition = new Vector3(0.0f, 0.80f, 5.70f);
+            if (triggerKill != null) triggerKill.gameObject.SetActive(false);
 
-            // 6. Accurate Hitbox & Right-Side Large Sit Trigger
+            // 5. Root Colliders (Solid chassis box + interaction trigger)
             BoxCollider[] colliders = root.GetComponents<BoxCollider>();
             int nonTriggerCount = 0;
             foreach (var col in colliders)
             {
                 if (col.isTrigger)
                 {
-                    // Large Sit Button Area towards the right side:
-                    // Center X = 3.80m, Size X = 5.00m (covers X = 1.3m to 6.3m on the right side)
-                    // Length = 7.00m, Height = 2.50m
-                    col.center = new Vector3(3.80f, 1.20f, 0.50f);
-                    col.size = new Vector3(5.00f, 2.50f, 7.00f);
+                    col.center = new Vector3(1.30f, 0.80f, 0.20f);
+                    col.size = new Vector3(2.50f, 2.00f, 3.50f);
                 }
                 else
                 {
                     if (nonTriggerCount == 0)
                     {
-                        // Accurate 1:1 Solid Car Hitbox:
-                        // Width: 5.20m, Height: 2.20m (bottom at 0.55m, top at 2.75m), Length: 11.40m
-                        col.center = new Vector3(0.0f, 1.65f, 0.0f);
-                        col.size = new Vector3(5.20f, 2.20f, 11.40f);
+                        col.center = new Vector3(0.0f, 1.15f, 0.0f);
+                        col.size = new Vector3(2.20f, 1.30f, 5.60f);
                         nonTriggerCount++;
                     }
                     else
@@ -192,6 +198,54 @@ public class SetupBatmobileMod
                         col.size = Vector3.zero;
                     }
                 }
+            }
+
+            // 6. Indestructibility, 5000 Top Speed, 500 Reverse Speed, Good Acceleration, Mass 4000
+            CarControl cc = root.GetComponent<CarControl>();
+            if (cc != null)
+            {
+                cc.topSpeed = 5000f;
+                cc.reverseSpeed = 500f;
+                cc.maxTorque = 68000f; // Good acceleration
+            }
+
+            Rigidbody carRb = root.GetComponent<Rigidbody>();
+            if (carRb != null)
+            {
+                carRb.mass = 4000f; // 4000 kg mass
+                carRb.drag = 0.005f; // Zero air drag so speed never drops during jumps
+                carRb.angularDrag = 1.0f;
+            }
+
+            ExplosionVehicle ev = root.GetComponent<ExplosionVehicle>();
+            if (ev != null)
+            {
+                ev.health = 999999999;
+                ev.enabled = false;
+            }
+
+            // Prevent crash character ejection
+            CarImpactCheck cic = root.GetComponent<CarImpactCheck>();
+            if (cic != null)
+            {
+                cic.damage = false;
+                cic.enabled = false;
+                cic._colDist = 999999f;
+                cic.glassImpact = null;
+                cic.bodyImpactBig = null;
+                cic.bodyImpactSmall = null;
+                cic.sparkImpact = null;
+                cic.crashSound = null;
+                cic.smallCrash = new AudioClip[0];
+                cic.mediumCrash = new AudioClip[0];
+                cic.largeCrash = new AudioClip[0];
+            }
+
+            CarJointControl[] cjcs = root.GetComponentsInChildren<CarJointControl>(true);
+            foreach (var cjc in cjcs)
+            {
+                cjc.DropThisDoor = false;
+                cjc.health = 999999999;
             }
 
             // 7. Tag all assets into AssetBundle 'rgs'
@@ -205,7 +259,7 @@ public class SetupBatmobileMod
             }
 
             PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
-            Debug.Log("[SetupBatmobileMod] 🎉 Successfully configured Batmobile at 75% size with accurate hitbox and right-side sit area!");
+            Debug.Log("[SetupCyberTruckMod] 🎉 Successfully configured CyberTruck vehicle!");
         }
         finally
         {
@@ -223,12 +277,12 @@ public class SetupBatmobileMod
             if (wc != null)
             {
                 wc.radius = radius;
-                wc.suspensionDistance = 0.25f;
-                JointSpring js = wc.suspensionSpring;
-                js.spring = 45000f;
-                js.damper = 5500f;
-                js.targetPosition = 0.45f;
-                wc.suspensionSpring = js;
+                wc.suspensionDistance = 0.30f;
+                var spring = wc.suspensionSpring;
+                spring.spring = 45000f;
+                spring.damper = 5500f;
+                spring.targetPosition = 0.40f;
+                wc.suspensionSpring = spring;
             }
         }
 
@@ -258,12 +312,24 @@ public class SetupBatmobileMod
                         mr.enabled = true;
                         Material tireMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/Material/tier_1o.mat");
                         Material rimMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/Material/wheel_truck_stamp_spec.mat");
+                        if (tireMat != null)
+                        {
+                            tireMat.SetColor("_Color", new Color(0.20f, 0.20f, 0.22f, 1f));
+                            tireMat.SetFloat("_Metallic", 0.10f);
+                            tireMat.SetFloat("_Glossiness", 0.25f);
+                        }
+                        if (rimMat != null)
+                        {
+                            rimMat.SetColor("_Color", new Color(0.12f, 0.12f, 0.14f, 1f));
+                            rimMat.SetFloat("_Metallic", 0.85f);
+                            rimMat.SetFloat("_Glossiness", 0.70f);
+                        }
                         if (tireMat != null && rimMat != null)
                         {
                             mr.sharedMaterials = new Material[] { tireMat, rimMat };
                         }
                     }
-                    Debug.Log("[SetupBatmobileMod] Assigned wheel mesh to " + modelPath + "/" + meshChildName);
+                    Debug.Log("[SetupCyberTruckMod] Assigned wheel mesh to " + modelPath + "/" + meshChildName);
                 }
             }
         }
