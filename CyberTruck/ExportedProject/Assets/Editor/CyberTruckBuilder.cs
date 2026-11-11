@@ -96,9 +96,15 @@ public static class CyberTruckBuilder
         }
 
         Directory.CreateDirectory(BuildDir);
-        var build = new AssetBundleBuild[1];
-        build[0].assetBundleName = BundleName;
+        var build = new AssetBundleBuild[2];
+        build[0].assetBundleName = "rgs";
         build[0].assetNames = new[]
+        {
+            PrefabPath.Replace("\\", "/"),
+            PrefabAliasPath.Replace("\\", "/"),
+        };
+        build[1].assetBundleName = "cybertruck";
+        build[1].assetNames = new[]
         {
             PrefabPath.Replace("\\", "/"),
             PrefabAliasPath.Replace("\\", "/"),
@@ -296,7 +302,79 @@ public static class CyberTruckBuilder
                 }
                 Debug.Log("[CyberTruck] wired " + goName + " <- " + mesh.name + " submeshes " + mesh.subMeshCount);
             }
+
+            // Vehicle Tuning: 5000 speed, 500 in back, good acceleration, 4000 mass, zero jump drag
+            var cc = contents.GetComponent<CarControl>();
+            if (cc != null)
+            {
+                cc.topSpeed = 5000f;
+                cc.reverseSpeed = 500f;
+                cc.maxTorque = 68000f; // Good acceleration
+            }
+
+            var rb = contents.GetComponent<Rigidbody>();
+            if (rb != null)
+            {
+                rb.mass = 4000f;
+                rb.drag = 0.005f; // Zero air drag so jump never loses speed
+                rb.angularDrag = 1.0f;
+            }
+
+            // Suspension: good suspension absorbing bumps smoothly
+            var wheelColliders = contents.GetComponentsInChildren<WheelCollider>(true);
+            foreach (var wc in wheelColliders)
+            {
+                wc.radius = 0.47f;
+                wc.suspensionDistance = 0.30f;
+                var spring = wc.suspensionSpring;
+                spring.spring = 45000f;
+                spring.damper = 5500f;
+                spring.targetPosition = 0.40f;
+                wc.suspensionSpring = spring;
+            }
+
+            // Player Protection: player should not fall at high speed
+            var cic = contents.GetComponent<CarImpactCheck>();
+            if (cic != null)
+            {
+                cic.enabled = false;
+                cic.damage = false;
+                cic._colDist = 999999f;
+            }
+
+            var rc = contents.GetComponent<RidingCar>();
+            if (rc != null)
+            {
+                rc.frontGlass = null;
+                rc.CamDis = 10;
+            }
+
+            var ev = contents.GetComponent<ExplosionVehicle>();
+            if (ev != null)
+            {
+                ev.health = 999999999;
+                ev.enabled = false;
+            }
+
+            var triggerKill = contents.transform.Find("TriggerKill");
+            if (triggerKill != null) triggerKill.gameObject.SetActive(false);
+
+            var doorJoints = contents.GetComponentsInChildren<CarJointControl>(true);
+            foreach (var dj in doorJoints)
+            {
+                dj.DropThisDoor = false;
+                dj.health = 999999999;
+            }
+
+            // Cameras
+            var cam = contents.transform.Find("Cam");
+            if (cam != null) cam.localPosition = new Vector3(0.0f, 1.60f, 0.20f);
+
+            var interiorCam = contents.transform.Find("Interior/InteriorCam");
+            if (interiorCam != null) interiorCam.localPosition = new Vector3(0.0f, 0.25f, 0.15f);
+
             PrefabUtility.SaveAsPrefabAsset(contents, PrefabPath);
+
         }
         finally
         {
