@@ -31,6 +31,7 @@
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
     "com.unity.modules.xr": "1.0.0",
-    "com.unity.ugui": "1.0.0"
+    "com.unity.ugui": "1.0.0",
+    "com.unity.cloud.gltfast": "https://github.com/atteneder/glTFast.git#v6.14.1"
   }
 }

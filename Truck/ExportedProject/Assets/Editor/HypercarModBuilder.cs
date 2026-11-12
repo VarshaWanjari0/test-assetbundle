@@ -36,11 +36,16 @@ public static class HypercarModBuilder
     {
         if (!AttachHypercarBody()) return;
         ApplySpecs();
-        if (!BuildBundle()) return;
+        // Set bundle name so BuildPipeline picks it up
+        var importer = AssetImporter.GetAtPath(PrefabPath);
+        if (importer != null)
+        {
+            importer.assetBundleName = BundleName;
+            importer.SaveAndReimport();
+        }
         EditorUtility.DisplayDialog("Hypercar Mod",
-            "AssetBundle built!\n\nOutput: AssetBundles/Android/" + BundleName +
-            "\n\nCopy it into the game's mods folder (same place the Truck mod lives), " +
-            "then load it in-game with the mod menu / cheat phone.", "Nice 🤙");
+            "Hypercar body attached and specs applied!\n\nNow build AssetBundles via Build > Build AssetBundles.\nOutput: AssetBundles/Android/" + BundleName +
+            "\n\nCopy the 'rgs' file into the game's mods folder.", "Ready 🤙");
     }
 
     [MenuItem("Tools/Hypercar/Attach Hypercar Body Only")]
