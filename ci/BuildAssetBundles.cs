@@ -32,6 +32,7 @@ public class BuildAssetBundles
         InvokeMethod("CyberTruckBuilder", "BuildBundle");
         InvokeMethod("CybertruckModBuilder", "BuildModAndroid");
         InvokeMethod("CybertruckModBuilder", "Build");
+        InvokeMethod("HypercarModBuilder", "BuildAll");
 
         // Standard AssetBundle build
         try

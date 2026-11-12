@@ -67,8 +67,6 @@ public static class HypercarModBuilder
         var root = PrefabUtility.LoadPrefabContents(PrefabPath);
         try
         {
-            // Find the "truck" body child (it has no renderer of its own in the export —
-            // we parent the GLB visuals here).
             Transform truck = FindDeepChild(root.transform, "truck");
             if (truck == null)
             {
@@ -76,19 +74,15 @@ public static class HypercarModBuilder
                 return false;
             }
 
-            // Remove any previously attached body visual
             var old = truck.Find("Hypercar (Body)");
             if (old != null) Object.DestroyImmediate(old.gameObject);
 
-            // Instantiate GLB visual and nest it
             var body = (GameObject)PrefabUtility.InstantiatePrefab(glb, truck);
             body.name = "Hypercar (Body)";
             body.transform.localPosition = Vector3.zero;
             body.transform.localRotation = Quaternion.identity;
-            // Hypercar Agunta is a low-poly supercar; scale to fit between wheel colliders.
             body.transform.localScale = Vector3.one * 1.2f;
 
-            // Report bounds so the user can fine-tune scale/offset
             var rends = body.GetComponentsInChildren<Renderer>();
             if (rends.Length > 0)
             {
@@ -121,24 +115,14 @@ public static class HypercarModBuilder
                 if (mb == null) continue;
                 var cType = mb.GetType().Name;
 
-                // -------------------------------------------------
-                // CarControl — dump.cs field layout (0x20..0xF8)
-                // -------------------------------------------------
                 if (cType == "CarControl")
                 {
                     var so = new SerializedObject(mb);
-
-                    // Speed: 5000 forward, 500 reverse
                     SetFloat(so, "topSpeed", 5000f);
                     SetFloat(so, "reverseSpeed", 500f);
-
-                    // Acceleration: very high torque for hypercar punch
                     SetFloat(so, "maxTorque", 60000f);
-
-                    // Steering
                     SetFloat(so, "steer", 40f);
 
-                    // Gears: wide spread for 5000 top speed
                     var gears = so.FindProperty("gears");
                     if (gears != null && gears.isArray)
                     {
@@ -147,7 +131,6 @@ public static class HypercarModBuilder
                         for (int i = 0; i < g.Length; i++) gears.GetArrayElementAtIndex(i).intValue = g[i];
                     }
 
-                    // Rigidbody interpolation (smooth at high speed)
                     var interp = so.FindProperty("bodyInterpolation");
                     if (interp != null) interp.enumValueIndex = (int)RigidbodyInterpolation.Interpolate;
 
@@ -155,91 +138,50 @@ public static class HypercarModBuilder
                     fixedCar++;
                 }
 
-                // -------------------------------------------------
-                // RidingCar — sit button / enter vehicle (dump.cs)
-                // Fields: canIntract, sitPos, doorPos, camTarget, carEnterButton,
-                //         interiorCam, _car (CarControl), doorsHings[], canIntract
-                // -------------------------------------------------
                 if (cType == "RidingCar")
                 {
                     var so = new SerializedObject(mb);
-
-                    // Enable interaction so sit button appears
                     var canIntract = so.FindProperty("canIntract");
                     if (canIntract != null) canIntract.boolValue = true;
-
-                    // Make sure ride flag starts false
                     var ridingCar = so.FindProperty("ridingCar");
                     if (ridingCar != null) ridingCar.boolValue = false;
-
                     so.ApplyModifiedPropertiesWithoutUndo();
                     fixedRide++;
                 }
             }
 
-            // -------------------------------------------------
-            // WheelCollider — handling & rotation
-            // WheelCollider does NOT inherit MonoBehaviour, so query directly
-            // -------------------------------------------------
             foreach (var wc in root.GetComponentsInChildren<WheelCollider>(true))
             {
-                // Stiff suspension for stability at 5000
                 var spring = wc.suspensionSpring;
-                spring.spring = 70000f;
-                spring.damper = 8000f;
-                spring.targetPosition = 0.5f;
+                spring.spring = 70000f; spring.damper = 8000f; spring.targetPosition = 0.5f;
                 wc.suspensionSpring = spring;
                 wc.suspensionDistance = 0.2f;
-
-                // Force application near center for stability
                 wc.forceAppPointDistance = 0.05f;
-
-                // Wheel mass & damping
                 wc.mass = 60f;
                 wc.wheelDampingRate = 0.4f;
 
-                // Forward friction — huge grip for acceleration & braking
                 var ff = wc.forwardFriction;
-                ff.extremumSlip = 2f;
-                ff.extremumValue = 14f;
-                ff.asymptoteSlip = 1.5f;
-                ff.asymptoteValue = 2.5f;
-                ff.stiffness = 1.8f;
+                ff.extremumSlip = 2f; ff.extremumValue = 14f; ff.asymptoteSlip = 1.5f; ff.asymptoteValue = 2.5f; ff.stiffness = 1.8f;
                 wc.forwardFriction = ff;
 
-                // Sideways friction — huge grip for cornering, no drift
                 var sf = wc.sidewaysFriction;
-                sf.extremumSlip = 1.8f;
-                sf.extremumValue = 14f;
-                sf.asymptoteSlip = 1.5f;
-                sf.asymptoteValue = 2.5f;
-                sf.stiffness = 1.9f;
+                sf.extremumSlip = 1.8f; sf.extremumValue = 14f; sf.asymptoteSlip = 1.5f; sf.asymptoteValue = 2.5f; sf.stiffness = 1.9f;
                 wc.sidewaysFriction = sf;
 
                 fixedWheel++;
             }
 
-            // -------------------------------------------------
-            // Rigidbody — anti-eject at high speed
-            // Rigidbody does NOT inherit MonoBehaviour, so query directly
-            // -------------------------------------------------
             foreach (var rb in root.GetComponentsInChildren<Rigidbody>(true))
             {
-                rb.mass = 3500f;                      // heavy, planted
-                rb.angularDrag = 4.0f;                // resists flipping
-                rb.collisionDetectionMode = CollisionDetectionMode.Continuous; // no tunneling
-                rb.interpolation = RigidbodyInterpolation.Interpolate;           // smooth
+                rb.mass = 3500f;
+                rb.angularDrag = 4.0f;
+                rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+                rb.interpolation = RigidbodyInterpolation.Interpolate;
                 rb.maxDepenetrationVelocity = 10f;
-
-                // Lock rotation to prevent tipping over
                 rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
-
                 fixedRb++;
             }
 
-            // -------------------------------------------------
-            // Center of mass — slam it low for stability
-            // -------------------------------------------------
             var com = FindDeepChild(root.transform, "Center of Mass");
             if (com != null)
             {
@@ -247,16 +189,11 @@ public static class HypercarModBuilder
             }
             else
             {
-                // Create a COM helper if missing
                 var comGo = new GameObject("Center of Mass");
                 comGo.transform.SetParent(root.transform, false);
                 comGo.transform.localPosition = new Vector3(0f, -0.45f, 0f);
             }
 
-            // -------------------------------------------------
-            // Player Protect box — anti-eject volume (from Cybertruck README)
-            // Keeps player inside the car at 5000 speed
-            // -------------------------------------------------
             var playerProtect = FindDeepChild(root.transform, "Player Protect");
             if (playerProtect == null)
             {
@@ -264,13 +201,10 @@ public static class HypercarModBuilder
                 ppGo.transform.SetParent(root.transform, false);
                 ppGo.transform.localPosition = new Vector3(0f, 0.8f, 0f);
                 ppGo.transform.localScale = new Vector3(2.2f, 1.6f, 3.2f);
-
                 var ppCol = ppGo.AddComponent<BoxCollider>();
                 ppCol.isTrigger = true;
                 ppCol.center = Vector3.zero;
                 ppCol.size = new Vector3(2.2f, 1.6f, 3.2f);
-
-                // Tag it so game code can find it
                 ppGo.tag = "PlayerProtect";
             }
 

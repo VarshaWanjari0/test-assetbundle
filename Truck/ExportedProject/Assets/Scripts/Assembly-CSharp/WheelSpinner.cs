@@ -15,7 +15,6 @@ public class WheelSpinner : MonoBehaviour
     {
         if (wheelCollider == null || tireMesh == null) return;
 
-        // Rotate the tire mesh based on wheel collider RPM
         tireMesh.Rotate(wheelCollider.rpm / 60f * 360f * Time.deltaTime, 0f, 0f);
     }
 }
