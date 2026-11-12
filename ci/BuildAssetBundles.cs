@@ -34,7 +34,8 @@ public class BuildAssetBundles
         InvokeMethod("CybertruckModBuilder", "Build");
         InvokeMethod("HypercarModBuilder", "BuildAll");
 
-        // Standard AssetBundle build
+        // Standard AssetBundle build — runs AFTER project-specific builders
+        // so the hypercar body is already attached to rgs.prefab
         try
         {
             AssetBundleManifest manifest = BuildPipeline.BuildAssetBundles(
