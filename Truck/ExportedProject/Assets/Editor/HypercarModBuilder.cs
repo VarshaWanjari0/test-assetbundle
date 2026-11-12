@@ -26,7 +26,7 @@ using System.IO;
 public static class HypercarModBuilder
 {
     const string PrefabPath   = "Assets/outsidemods/prefab/rgs.prefab";
-    const string GlbPath      = "Assets/Models/hypercar_agunta.glb";
+    const string ObjPath    = "Assets/Models/hypercar_agunta.obj";
     const string BundleName   = "rgs";   // asset name the game's mod loader expects
 
     // ---------------------------------------------------------------
@@ -49,12 +49,12 @@ public static class HypercarModBuilder
     // ---------------------------------------------------------------
     static bool AttachHypercarBody()
     {
-        var glb = AssetDatabase.LoadAssetAtPath<GameObject>(GlbPath);
-        if (glb == null)
+        var obj = AssetDatabase.LoadAssetAtPath<GameObject>(ObjPath);
+        if (obj == null)
         {
             EditorUtility.DisplayDialog("Hypercar Mod",
-                "Could not load " + GlbPath + "\n\n" +
-                "Make sure hypercar_agunta.glb is in Assets/Models/ and glTFast package is installed.", "OK");
+                "Could not load " + ObjPath + "\n\n" +
+                "Make sure hypercar_agunta.obj is in Assets/Models/.", "OK");
             return false;
         }
 
@@ -71,7 +71,7 @@ public static class HypercarModBuilder
             var old = truck.Find("Hypercar (Body)");
             if (old != null) Object.DestroyImmediate(old.gameObject);
 
-            var body = (GameObject)PrefabUtility.InstantiatePrefab(glb, truck);
+            var body = (GameObject)PrefabUtility.InstantiatePrefab(obj, truck);
             body.name = "Hypercar (Body)";
             body.transform.localPosition = Vector3.zero;
             body.transform.localRotation = Quaternion.identity;
