@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        project: [Truck]
+        project: [Truck, Prop]
 
     steps:
       - name: Free Disk Space, Enable Swap & Optimize Docker
