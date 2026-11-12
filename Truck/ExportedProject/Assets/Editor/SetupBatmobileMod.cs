@@ -84,7 +84,7 @@ public class SetupBatmobileMod
             }
 
             // 2. Setup 4 Rotating Wheels with Cybertruck Wheelbase and Track Width
-            float wheelRadius = 0.47f;
+            float wheelRadius = 0.45f;
             Vector3 posFL = new Vector3(-1.00f, 0.70f,  1.60f);
             Vector3 posFR = new Vector3( 1.00f, 0.70f,  1.60f);
             Vector3 posRL = new Vector3(-1.00f, 0.70f, -2.07f);
