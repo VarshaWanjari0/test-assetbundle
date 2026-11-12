@@ -175,64 +175,66 @@ public static class HypercarModBuilder
                     so.ApplyModifiedPropertiesWithoutUndo();
                     fixedRide++;
                 }
+            }
 
-                // -------------------------------------------------
-                // WheelCollider — handling & rotation
-                // -------------------------------------------------
-                if (mb is WheelCollider wc)
-                {
-                    // Stiff suspension for stability at 5000
-                    var spring = wc.suspensionSpring;
-                    spring.spring = 70000f;
-                    spring.damper = 8000f;
-                    spring.targetPosition = 0.5f;
-                    wc.suspensionSpring = spring;
-                    wc.suspensionDistance = 0.2f;
+            // -------------------------------------------------
+            // WheelCollider — handling & rotation
+            // WheelCollider does NOT inherit MonoBehaviour, so query directly
+            // -------------------------------------------------
+            foreach (var wc in root.GetComponentsInChildren<WheelCollider>(true))
+            {
+                // Stiff suspension for stability at 5000
+                var spring = wc.suspensionSpring;
+                spring.spring = 70000f;
+                spring.damper = 8000f;
+                spring.targetPosition = 0.5f;
+                wc.suspensionSpring = spring;
+                wc.suspensionDistance = 0.2f;
 
-                    // Force application near center for stability
-                    wc.forceAppPointDistance = 0.05f;
+                // Force application near center for stability
+                wc.forceAppPointDistance = 0.05f;
 
-                    // Wheel mass & damping
-                    wc.mass = 60f;
-                    wc.wheelDampingRate = 0.4f;
+                // Wheel mass & damping
+                wc.mass = 60f;
+                wc.wheelDampingRate = 0.4f;
 
-                    // Forward friction — huge grip for acceleration & braking
-                    var ff = wc.forwardFriction;
-                    ff.extremumSlip = 2f;
-                    ff.extremumValue = 14f;
-                    ff.asymptoteSlip = 1.5f;
-                    ff.asymptoteValue = 2.5f;
-                    ff.stiffness = 1.8f;
-                    wc.forwardFriction = ff;
+                // Forward friction — huge grip for acceleration & braking
+                var ff = wc.forwardFriction;
+                ff.extremumSlip = 2f;
+                ff.extremumValue = 14f;
+                ff.asymptoteSlip = 1.5f;
+                ff.asymptoteValue = 2.5f;
+                ff.stiffness = 1.8f;
+                wc.forwardFriction = ff;
 
-                    // Sideways friction — huge grip for cornering, no drift
-                    var sf = wc.sidewaysFriction;
-                    sf.extremumSlip = 1.8f;
-                    sf.extremumValue = 14f;
-                    sf.asymptoteSlip = 1.5f;
-                    sf.asymptoteValue = 2.5f;
-                    sf.stiffness = 1.9f;
-                    wc.sidewaysFriction = sf;
+                // Sideways friction — huge grip for cornering, no drift
+                var sf = wc.sidewaysFriction;
+                sf.extremumSlip = 1.8f;
+                sf.extremumValue = 14f;
+                sf.asymptoteSlip = 1.5f;
+                sf.asymptoteValue = 2.5f;
+                sf.stiffness = 1.9f;
+                wc.sidewaysFriction = sf;
 
-                    fixedWheel++;
-                }
+                fixedWheel++;
+            }
 
-                // -------------------------------------------------
-                // Rigidbody — anti-eject at high speed
-                // -------------------------------------------------
-                if (mb is Rigidbody rb)
-                {
-                    rb.mass = 3500f;                      // heavy, planted
-                    rb.angularDrag = 4.0f;                // resists flipping
-                    rb.collisionDetectionMode = CollisionDetectionMode.Continuous; // no tunneling
-                    rb.interpolation = RigidbodyInterpolation.Interpolate;           // smooth
-                    rb.maxDepenetrationVelocity = 10f;
+            // -------------------------------------------------
+            // Rigidbody — anti-eject at high speed
+            // Rigidbody does NOT inherit MonoBehaviour, so query directly
+            // -------------------------------------------------
+            foreach (var rb in root.GetComponentsInChildren<Rigidbody>(true))
+            {
+                rb.mass = 3500f;                      // heavy, planted
+                rb.angularDrag = 4.0f;                // resists flipping
+                rb.collisionDetectionMode = CollisionDetectionMode.Continuous; // no tunneling
+                rb.interpolation = RigidbodyInterpolation.Interpolate;           // smooth
+                rb.maxDepenetrationVelocity = 10f;
 
-                    // Lock rotation to prevent tipping over
-                    rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+                // Lock rotation to prevent tipping over
+                rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
 
-                    fixedRb++;
-                }
+                fixedRb++;
             }
 
             // -------------------------------------------------
