@@ -15,7 +15,6 @@
 // Menu:  Tools > Hypercar > Build Polished Mod (Android)
 //        Tools > Hypercar > Attach Hypercar Body Only
 //        Tools > Hypercar > Apply Hypercar Specs Only
-//        Tools > Hypercar > Build AssetBundle Only
 //
 // Requirements: Unity 2021.3.x (project targets 2021.3.43f1) + Android Build Support.
 
@@ -36,13 +35,6 @@ public static class HypercarModBuilder
     {
         if (!AttachHypercarBody()) return;
         ApplySpecs();
-        // Set bundle name so BuildPipeline picks it up
-        var importer = AssetImporter.GetAtPath(PrefabPath);
-        if (importer != null)
-        {
-            importer.assetBundleName = BundleName;
-            importer.SaveAndReimport();
-        }
         EditorUtility.DisplayDialog("Hypercar Mod",
             "Hypercar body attached and specs applied!\n\nNow build AssetBundles via Build > Build AssetBundles.\nOutput: AssetBundles/Android/" + BundleName +
             "\n\nCopy the 'rgs' file into the game's mods folder.", "Ready 🤙");
@@ -54,9 +46,6 @@ public static class HypercarModBuilder
     [MenuItem("Tools/Hypercar/Apply Hypercar Specs Only")]
     public static void SpecsOnly() { ApplySpecs(); }
 
-    [MenuItem("Tools/Hypercar/Build AssetBundle Only")]
-    public static void BundleOnly() { BuildBundle(); }
-
     // ---------------------------------------------------------------
     static bool AttachHypercarBody()
     {
@@ -65,7 +54,7 @@ public static class HypercarModBuilder
         {
             EditorUtility.DisplayDialog("Hypercar Mod",
                 "Could not load " + GlbPath + "\n\n" +
-                "Make sure hypercar_agunta.glb is in Assets/Models/ and the project has finished importing.", "OK");
+                "Make sure hypercar_agunta.glb is in Assets/Models/ and glTFast package is installed.", "OK");
             return false;
         }
 
@@ -222,31 +211,6 @@ public static class HypercarModBuilder
         {
             PrefabUtility.UnloadPrefabContents(root);
         }
-    }
-
-    // ---------------------------------------------------------------
-    static bool BuildBundle()
-    {
-        var importer = AssetImporter.GetAtPath(PrefabPath);
-        if (importer == null)
-        {
-            Debug.LogError("[Hypercar] Importer not found for " + PrefabPath);
-            return false;
-        }
-        importer.assetBundleName = BundleName;
-        importer.SaveAndReimport();
-
-        string outDir = Path.GetFullPath(Path.Combine(Application.dataPath, "../AssetBundles/Android"));
-        Directory.CreateDirectory(outDir);
-
-        var manifest = BuildPipeline.BuildAssetBundles(outDir, BuildAssetBundleOptions.None, BuildTarget.Android);
-        if (manifest == null)
-        {
-            Debug.LogError("[Hypercar] AssetBundle build FAILED. Is the Android Build Support module installed?");
-            return false;
-        }
-        Debug.Log("[Hypercar] ✅ Bundle built at: " + outDir);
-        return true;
     }
 
     // ---------------------------------------------------------------
