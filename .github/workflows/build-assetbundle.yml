@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        project: [CybertruckMod]
+        project: [Truck]
 
     steps:
       - name: Free Disk Space, Enable Swap & Optimize Docker
