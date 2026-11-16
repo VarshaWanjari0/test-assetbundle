@@ -42,7 +42,9 @@ jobs:
           from pathlib import Path
           kind = os.environ['KIND']
           root = Path('Recovered') / kind
-          out = Path('recovered-build') / (kind + '-Unity-project.zip')
+          outdir = Path('artifacts')
+          outdir.mkdir(exist_ok=True)
+          out = outdir / (kind + '-Unity-project.zip')
           excluded = {'Library', 'Temp', 'Obj', 'Build', 'Builds', 'Logs', 'UserSettings', 'MemoryCaptures'}
           with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED, compresslevel=6) as z:
               for path in sorted(root.rglob('*')):
@@ -50,12 +52,14 @@ jobs:
                       z.write(path, arcname=path.relative_to(root))
           print('Created', out, out.stat().st_size, 'bytes')
           PY
+      - name: Copy bundle to artifact directory
+        run: cp "recovered-build/${{ matrix.kind }}.glb" artifacts/
       - name: Upload project and bundle
         uses: actions/upload-artifact@v4
         with:
           name: recovered-${{ matrix.kind }}-2021
           path: |
-            recovered-build/${{ matrix.kind }}.glb
-            recovered-build/${{ matrix.kind }}-Unity-project.zip
+            artifacts/${{ matrix.kind }}.glb
+            artifacts/${{ matrix.kind }}-Unity-project.zip
           if-no-files-found: error
           retention-days: 14
