@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        project: [Truck]
+        project: [Truck, Prop]
 
     steps:
       - name: Free Disk Space, Enable Swap & Optimize Docker
@@ -60,11 +60,9 @@ jobs:
           echo "Selected Target Platform: $TARGET"
           echo "TARGET_PLATFORM=$TARGET" >> "$GITHUB_ENV"
 
-      - name: Inject Build Script
-        run: |
-          mkdir -p ${{ matrix.project }}/ExportedProject/Assets/Editor
-          cp ci/BuildAssetBundles.cs ${{ matrix.project }}/ExportedProject/Assets/Editor/BuildAssetBundles.cs
-
+      # Each project under <Project>/ExportedProject carries its own
+      # Assets/Editor/BuildModBundle.cs with a batch-mode entry point
+      # that tags all assets into the 'rgs' bundle and runs BuildAssetBundles.
       - name: Build AssetBundles with GameCI
         uses: game-ci/unity-builder@v4
         env:
@@ -76,14 +74,13 @@ jobs:
           unityVersion: 2021.3.43f1
           targetPlatform: ${{ env.TARGET_PLATFORM }}
           versioning: None
-          buildMethod: BuildAssetBundles.BuildAllBundles
+          buildMethod: BuildModBundle.BuildFromCommandLine
 
       - name: Upload Built AssetBundles
         uses: actions/upload-artifact@v4
         with:
           name: AssetBundles-${{ matrix.project }}-${{ env.TARGET_PLATFORM }}
           path: |
+            ${{ matrix.project }}/ExportedProject/Build/
             ${{ matrix.project }}/ExportedProject/Assets/AssetBundles/
-            ${{ matrix.project }}/ExportedProject/AssetBundles/
-            ${{ matrix.project }}/ExportedProject/Build/Android/
           if-no-files-found: warn

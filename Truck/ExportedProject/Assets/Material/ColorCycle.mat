@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: ColorCycle
-  m_Shader: {fileID: 4800000, guid: 8e71c1dea24291e4db6408cd26b3672f, type: 3}
+  m_Shader: {fileID: 4800000, guid: da76c727c61f1f142a56444cbed0c510, type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords: []
   m_LightmapFlags: 4
@@ -21,11 +21,11 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
       _GradientTex:
-        m_Texture: {fileID: 2800000, guid: bb97d4bb869d9ae43a17410190351f0c, type: 3}
+        m_Texture: {fileID: 2800000, guid: e6b788fa794349441bba876548b29d27, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
       _MainTex:
-        m_Texture: {fileID: 2800000, guid: 665d377f23a24d841a3d4547d5893560, type: 3}
+        m_Texture: {fileID: 2800000, guid: 36b74811de732dc45a80a53e66b40535, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: {}
