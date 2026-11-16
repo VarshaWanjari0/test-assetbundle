@@ -1,0 +1,72 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!78 &1
+TagManager:
+  serializedVersion: 2
+  tags:
+  - LoseControl
+  - Ragdoll
+  - OtherRagdoll
+  - Weapon
+  - Vehicle
+  - Tire
+  - NPC
+  - Glass
+  - Marcador
+  - Blocks
+  - TrafficCar
+  - RANDOMRUNPATH
+  - Nodes
+  - AIVehicle
+  - TrafficLight
+  - CommonTrigger
+  - Stop
+  - ways
+  - HandleTrigger
+  - Human
+  - Street
+  - Grass
+  - GasTank
+  - MovingPlatform
+  layers:
+  - Default
+  - TransparentFX
+  - Ignore Raycast
+  - 
+  - Water
+  - UI
+  - 
+  - FaceMask
+  - Player
+  - Car
+  - Ragdoll
+  - OtherRagdoll
+  - NoCol
+  - Arrow
+  - Tree
+  - Weapon
+  - Helmet
+  - Tire
+  - NPC
+  - Phone
+  - Climb
+  - AI
+  - Train
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  m_SortingLayers:
+  - name: Default
+    uniqueID: 0
+    locked: 0
+  - name: Vehicles
+    uniqueID: 2256834163
+    locked: 0
+  m_RenderingLayers:
+  - Default
