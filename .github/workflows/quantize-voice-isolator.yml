@@ -1,0 +1,72 @@
+name: Quantize Voice Isolator Q8
+on:
+  push:
+    branches: [audio-cpp-android-build]
+    paths:
+      - '.github/workflows/quantize-voice-isolator.yml'
+      - 'voice-isolator-quantize/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  quantize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      OMP_NUM_THREADS: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: voice-isolator-quantize
+      - name: Install build and validation tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y cmake ninja-build g++ libgomp1 python3-pip
+          python3 -m pip install --break-system-packages numpy scipy soundfile gguf safetensors
+      - name: Build original audio.cpp quantizer and native smoke-test runtime
+        run: |
+          git init -q source
+          git -C source remote add origin https://github.com/0xShug0/audio.cpp.git
+          git -C source fetch --depth 1 origin a2423eb37617bce38b618e5a2ea2bb124f72c7ee
+          git -C source checkout --detach FETCH_HEAD
+          cmake -S source -B build-native -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DAUDIOCPP_MODEL_SET=custom -DAUDIOCPP_MODELS=voice_isolator \
+            -DAUDIOCPP_DEPLOYMENT_BUILD=ON -DENGINE_ENABLE_NATIVE_CPU=ON \
+            -DENGINE_ENABLE_OPENMP=ON -DGGML_OPENMP=ON \
+            -DENGINE_ENABLE_CUDA=OFF -DENGINE_ENABLE_VULKAN=OFF \
+            -DENGINE_BUILD_TESTS=OFF -DENGINE_BUILD_EXAMPLES=OFF
+          cmake --build build-native --target audiocpp_gguf audiocpp_cli --parallel 4
+      - name: Download and checksum original Inworld offline checkpoint
+        run: |
+          mkdir -p original
+          curl -fL --retry 3 \
+            https://huggingface.co/inworld/voice-isolator/resolve/9b0285b3fe8403aa8e2f1dbb2165a80a4294c970/denoiser.safetensors \
+            -o original/denoiser.safetensors
+          echo "647335a6aeb4dc706b895532c209d51e0e84a4849d17b339f00d4392a050ae53  original/denoiser.safetensors" | sha256sum -c -
+      - name: Quantize Q8, verify metadata and run F32-vs-Q8 inference comparison
+        run: python3 voice-isolator-quantize/quantize.py
+      - name: Include upstream weight license and notices
+        run: |
+          curl -fLsS https://huggingface.co/inworld/voice-isolator/resolve/9b0285b3fe8403aa8e2f1dbb2165a80a4294c970/LICENSE -o dist-q8/LICENSE
+          curl -fLsS https://huggingface.co/inworld/voice-isolator/resolve/9b0285b3fe8403aa8e2f1dbb2165a80a4294c970/NOTICE -o dist-q8/NOTICE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: voice-isolator-offline-q8_0-audiocpp
+          path: dist-q8/*
+          compression-level: 6
+          retention-days: 30
+          if-no-files-found: error
+      - name: Save diagnostics if conversion or validation fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: voice-isolator-q8-diagnostics
+          path: |
+            dist-q8/*.json
+            dist-q8/*.txt
+            build-native/CMakeCache.txt
+            build-native/CMakeFiles/CMakeConfigureLog.yaml
+          retention-days: 7
+          if-no-files-found: ignore
