@@ -23,6 +23,21 @@ p=Path('src/CMakeLists.txt');s=p.read_text()
 a='file(GLOB AUDIOCPP_MODEL_SPEC_FILES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/model_specs/*.json")'
 b='set(AUDIOCPP_MODEL_SPEC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/model_specs/voice_isolator.json")'
 assert a in s;s=s.replace(a,b);p.write_text(s)
+# posix_spawnp is Android API 28+. Keep API 24 support without adding a shim library.
+p=Path('src/app/workflow/workflow.cpp');s=p.read_text()
+s=s.replace('#include <spawn.h>', '#include <spawn.h>\n#include <unistd.h>')
+a='    const int spawn_rc = posix_spawnp(&pid, program.c_str(), nullptr, nullptr, argv.data(), environ);'
+b='''#if defined(__ANDROID__) && __ANDROID_API__ < 28
+    pid = fork();
+    const int spawn_rc = pid < 0 ? errno : 0;
+    if (pid == 0) {
+        execvp(program.c_str(), argv.data());
+        _exit(127);
+    }
+#else
+'''+a+'''
+#endif'''
+assert a in s;s=s.replace(a,b);p.write_text(s)
 PY
 args=(
   -S src -B build -G Ninja
@@ -47,8 +62,13 @@ args=(
   -DGGML_CPU_KLEIDIAI=OFF
 )
 if [[ "$variant" == vulkan ]]; then
+  # NDK ships C Vulkan headers, but ggml also needs the Vulkan-Hpp C++ headers.
+  # Copy only graphics headers: never add host /usr/include to an Android build.
+  mkdir -p android-vulkan-headers
+  cp -a /usr/include/vulkan android-vulkan-headers/
+  if [[ -d /usr/include/vk_video ]]; then cp -a /usr/include/vk_video android-vulkan-headers/; fi
   args+=( -DENGINE_ENABLE_VULKAN=ON
-    -DVulkan_INCLUDE_DIR="$tc/sysroot/usr/include"
+    -DVulkan_INCLUDE_DIR="$PWD/android-vulkan-headers"
     -DVulkan_LIBRARY="$tc/sysroot/usr/lib/aarch64-linux-android/24/libvulkan.so"
     -DVulkan_GLSLC_EXECUTABLE=/usr/bin/glslc )
 fi
