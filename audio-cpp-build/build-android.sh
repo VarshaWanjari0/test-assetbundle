@@ -38,6 +38,12 @@ b='''#if defined(__ANDROID__) && __ANDROID_API__ < 28
 '''+a+'''
 #endif'''
 assert a in s;s=s.replace(a,b);p.write_text(s)
+# Avoid a static dependency on API-28 Vulkan exports; use the existing dispatcher.
+p=Path('src/external/ggml/src/ggml-vulkan/ggml-vulkan.cpp');s=p.read_bytes()
+a=b'vkGetPhysicalDeviceFeatures2('
+assert s.count(a)==3
+s=s.replace(a,b'ggml_vk_default_dispatcher().vkGetPhysicalDeviceFeatures2(')
+p.write_bytes(s)
 PY
 args=(
   -S src -B build -G Ninja
@@ -90,6 +96,11 @@ for path in src/external/*/LICENSE* src/external/*/COPYING*; do
   parent=$(basename "$(dirname "$path")")
   cp "$path" "$out/licenses/${parent}-$(basename "$path")"
 done
+# Retain nested third-party notices too (for example protobuf inside SentencePiece).
+while IFS= read -r -d '' path; do
+  relative=${path#src/}
+  cp "$path" "$out/licenses/${relative//\//__}"
+done < <(find src/external -type f \( -iname '*license*' -o -iname '*copying*' -o -iname '*notice*' \) -print0)
 # Compiler runtime license notices for the statically linked C++ and OpenMP code.
 for component in libcxx libcxxabi openmp; do
   curl -fLsS "https://raw.githubusercontent.com/llvm/llvm-project/release/18.x/$component/LICENSE.TXT" -o "$out/licenses/LLVM-$component-LICENSE.txt"
