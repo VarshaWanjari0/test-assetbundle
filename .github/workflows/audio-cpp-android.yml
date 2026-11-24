@@ -1,0 +1,55 @@
+name: Android ARM64 Voice Isolator
+on:
+  push:
+    branches: [audio-cpp-android-build]
+    paths:
+      - '.github/workflows/audio-cpp-android.yml'
+      - 'audio-cpp-build/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    name: Android ARM64 (${{ matrix.variant }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [cpu, vulkan]
+    env:
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+      CMAKE_BUILD_PARALLEL_LEVEL: 2
+      XZ_OPT: -T2 -9
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            audio-cpp-build
+            .github/workflows
+      - name: Install host build tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ninja-build cmake glslc libvulkan-dev xz-utils
+          sdkmanager --install 'ndk;27.2.12479018' >/dev/null
+      - name: Cross-compile selected model and package
+        run: bash audio-cpp-build/build-android.sh '${{ matrix.variant }}'
+      - name: Upload small compressed runtime (no model weights)
+        uses: actions/upload-artifact@v4
+        with:
+          name: audio-cpp-android-arm64-${{ matrix.variant }}
+          path: dist/*
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: error
+      - name: Upload diagnostic logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-diagnostics-${{ matrix.variant }}
+          path: |
+            work-${{ matrix.variant }}/build/CMakeCache.txt
+            work-${{ matrix.variant }}/build/CMakeFiles/CMakeConfigureLog.yaml
+          retention-days: 3
+          if-no-files-found: ignore
