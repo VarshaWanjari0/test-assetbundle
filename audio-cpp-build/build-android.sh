@@ -61,11 +61,13 @@ args=(
   -DENGINE_ENABLE_VULKAN=OFF -DGGML_OPENCL=OFF
   -DGGML_CPU_KLEIDIAI=OFF
 )
+omp_static="$tc/lib/clang/18/lib/linux/aarch64/libomp.a"
+if [[ -f "$omp_static" ]]; then args+=( -DOpenMP_omp_LIBRARY="$omp_static" ); fi
 if [[ "$variant" == vulkan ]]; then
   # NDK ships C Vulkan headers, but ggml also needs the Vulkan-Hpp C++ headers.
   # Copy only graphics headers: never add host /usr/include to an Android build.
   mkdir -p android-vulkan-headers
-  cp -a /usr/include/vulkan android-vulkan-headers/
+  cp -a /usr/include/vulkan /usr/include/spirv android-vulkan-headers/
   if [[ -d /usr/include/vk_video ]]; then cp -a /usr/include/vk_video android-vulkan-headers/; fi
   args+=( -DENGINE_ENABLE_VULKAN=ON
     -DVulkan_INCLUDE_DIR="$PWD/android-vulkan-headers"
@@ -98,8 +100,12 @@ done
 "$tc/bin/llvm-readelf" -h -d "$out/lib/libaudiocpp.so" > "$out/ELF-LIBRARY.txt"
 grep -q AArch64 "$out/ELF-CLI.txt"
 grep -q /system/bin/linker64 "$out/ELF-CLI.txt"
-if grep -E 'NEEDED.*(libc\+\+_shared|libomp)' "$out/ELF-CLI.txt" "$out/ELF-LIBRARY.txt"; then
-  echo 'Unexpected shared compiler runtime dependency' >&2;exit 1
+if grep -E 'NEEDED.*libc\+\+_shared' "$out/ELF-CLI.txt" "$out/ELF-LIBRARY.txt"; then
+  echo 'Unexpected shared C++ runtime dependency' >&2;exit 1
+fi
+if grep -q 'NEEDED.*libomp.so' "$out/ELF-CLI.txt" "$out/ELF-LIBRARY.txt"; then
+  cp "$tc/lib/clang/18/lib/linux/aarch64/libomp.so" "$out/lib/"
+  "$tc/bin/llvm-strip" --strip-unneeded "$out/lib/libomp.so"
 fi
 "$tc/bin/llvm-nm" -D "$out/lib/libaudiocpp.so" | grep ' T audiocpp_' > "$out/EXPORTED-C-API.txt"
 [[ $(wc -l < "$out/EXPORTED-C-API.txt") -gt 10 ]]
